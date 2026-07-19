@@ -1,12 +1,15 @@
 """Build the Europe + Canada state picker used by Focus Studio diplomacy."""
 
 import json
+import os
 import re
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent
-GAME = Path(r"E:\SteamLibrary\steamapps\common\Hearts of Iron IV")
+GAME = Path(os.environ.get("HOI4_GAME_PATH", ""))
+if not os.environ.get("HOI4_GAME_PATH"):
+    raise SystemExit("Set HOI4_GAME_PATH to your Hearts of Iron IV installation folder.")
 OUT = ROOT / "data" / "europe_canada_states.json"
 TAGS = {
     "ALB", "AUS", "BEL", "BUL", "CAN", "CZE", "DEN", "ENG", "EST", "FIN",

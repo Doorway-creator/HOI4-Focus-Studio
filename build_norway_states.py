@@ -1,8 +1,10 @@
-import json, re
+import json, os, re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-GAME = Path(r"E:\SteamLibrary\steamapps\common\Hearts of Iron IV")
+GAME = Path(os.environ.get("HOI4_GAME_PATH", ""))
+if not os.environ.get("HOI4_GAME_PATH"):
+    raise SystemExit("Set HOI4_GAME_PATH to your Hearts of Iron IV installation folder.")
 PROJECT = ROOT / "projects" / "default_project.json"
 
 names = {}

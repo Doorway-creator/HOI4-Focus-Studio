@@ -10,6 +10,7 @@ import time
 import webbrowser
 import os
 import subprocess
+import tempfile
 from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
@@ -21,6 +22,22 @@ ROOT = Path(__file__).resolve().parent
 PROJECT_FILE = ROOT / "projects" / "default_project.json"
 SOURCE_MOD = ROOT / "base_mod" / "Norwegian_Kings_Yes_DLC_Tree_Test"
 EXPORT_ROOT = ROOT / "exports"
+LOCAL_PATH_FIELDS = {"exportPath", "hoi4ModFolder"}
+
+
+def public_project(project: dict) -> dict:
+    """Keep computer-specific paths out of projects, backups, and exported mods."""
+    return {key: value for key, value in project.items() if key not in LOCAL_PATH_FIELDS}
+
+
+def selected_directory(value: object, label: str) -> Path:
+    raw = str(value or "").strip()
+    if not raw:
+        raise ValueError(f"Choose a {label} folder first.")
+    path = Path(raw).expanduser()
+    if not path.is_absolute():
+        raise ValueError(f"The {label} folder must be an absolute path.")
+    return path.resolve()
 
 
 def matching_brace(text: str, opening: int) -> int:
@@ -205,23 +222,29 @@ def _next_export_version(current: str, bump: str) -> str:
     return f"v{major}_{minor}" + (f"_{fix}" if fix is not None else "")
 
 
-def _make_versioned_zip(export_parent: Path, project: dict, version: str) -> Path:
+def _export_name(project: dict, version: str) -> str:
     folder_name = re.sub(r"[^A-Za-z0-9_-]", "_", project.get("exportFolder", "Norway_Remade"))
     safe_version = re.sub(r"[^A-Za-z0-9_-]", "_", version)
-    zip_base = export_parent / f"{folder_name}_{safe_version}"
+    return f"{folder_name}_{safe_version}"
+
+
+def _make_versioned_zip(export_root: Path, package_dir: Path) -> Path:
+    zip_base = export_root / package_dir.name
     zip_path = Path(str(zip_base) + ".zip")
     if zip_path.exists():
         zip_path.unlink()
-    shutil.make_archive(str(zip_base), "zip", export_parent, folder_name)
+    shutil.make_archive(str(zip_base), "zip", package_dir)
     return zip_path
 
 
-def export_project(project: dict) -> Path:
+def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
     version = re.sub(r"[^A-Za-z0-9_.-]", "_", project.get("exportVersion", "v077_editor_export"))
-    folder_name = re.sub(r"[^A-Za-z0-9_-]", "_", project.get("exportFolder", "Norway_Remade"))
-    target = EXPORT_ROOT / version / folder_name
-    if target.parent.exists():
-        shutil.rmtree(target.parent)
+    folder_name = _export_name(project, version)
+    package_dir = export_root / folder_name
+    target = package_dir / folder_name
+    if package_dir.exists():
+        shutil.rmtree(package_dir)
+    package_dir.mkdir(parents=True, exist_ok=True)
     shutil.copytree(SOURCE_MOD, target)
     descriptor = (target / "descriptor.mod").read_text(encoding="utf-8-sig")
     descriptor = re.sub(r'(?m)^\s*version\s*=\s*"[^"]+"', f'version="{version}"', descriptor, count=1)
@@ -230,7 +253,7 @@ def export_project(project: dict) -> Path:
     descriptor = re.sub(r'(?m)^\s*name\s*=\s*"[^"]+"', f'name="{display_name} — {version_label}"', descriptor, count=1)
     (target / "descriptor.mod").write_text(descriptor, encoding="utf-8")
     external = descriptor + f'\npath="mod/{folder_name}"\n'
-    (target.parent / f"{folder_name}.mod").write_text(external, encoding="utf-8")
+    (package_dir / f"{folder_name}.mod").write_text(external, encoding="utf-8")
     focus_file = target / "common" / "national_focus" / "norway.txt"
     old = focus_file.read_text(encoding="utf-8-sig")
     tree_start = old.find("focus_tree = {")
@@ -496,7 +519,10 @@ def export_project(project: dict) -> Path:
 
     if custom_icons.exists():
         for icon in custom_icons.rglob("*.dds"):
-            shutil.copy2(icon, goal_dir / icon.name)
+            relative_icon = icon.relative_to(custom_icons)
+            destination_icon = goal_dir / relative_icon
+            destination_icon.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(icon, destination_icon)
 
     # Read every existing .gfx file first so already-valid definitions are kept.
     defined_names = set()
@@ -555,31 +581,36 @@ def export_project(project: dict) -> Path:
     for focus in project.get("focuses", []):
         for action in focus.get("diplomacy", []):
             action.pop("_eventId", None)
-    (target / "hoi4_focus_studio_project.json").write_text(json.dumps(project, ensure_ascii=False, indent=2), encoding="utf-8")
-    return target.parent
-
-
-def _default_hoi4_mod_dir() -> Path:
-    preferred = Path(r"C:\Users\Public\Documents\Paradox Interactive\Hearts of Iron IV\mod")
-    if preferred.parent.exists() or preferred.exists():
-        return preferred
-    candidates = [Path.home()/"OneDrive"/"Dokumenter"/"Paradox Interactive"/"Hearts of Iron IV"/"mod", Path.home()/"Documents"/"Paradox Interactive"/"Hearts of Iron IV"/"mod"]
-    return next((p for p in candidates if p.parent.exists()), candidates[-1])
+    (target / "hoi4_focus_studio_project.json").write_text(json.dumps(public_project(project), ensure_ascii=False, indent=2), encoding="utf-8")
+    return package_dir
 
 
 def install_test_build(project: dict) -> Path:
-    exported = export_project(project)
-    hoi4_mods = Path(project.get("hoi4ModFolder") or _default_hoi4_mod_dir())
+    hoi4_mods = selected_directory(project.get("hoi4ModFolder"), "Hearts of Iron IV mod")
     hoi4_mods.mkdir(parents=True, exist_ok=True)
     folder_name = re.sub(r"[^A-Za-z0-9_-]", "_", project.get("testFolder", "Norway_Remade_Test"))
-    export_folder = re.sub(r"[^A-Za-z0-9_-]", "_", project.get("exportFolder", "Norway_Remade"))
     destination = hoi4_mods / folder_name
-    backup_root = ROOT / "backups"; backup_root.mkdir(exist_ok=True)
-    if destination.exists():
-        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        shutil.make_archive(str(backup_root/f"{folder_name}_{stamp}"), "zip", destination)
-        shutil.rmtree(destination)
-    shutil.copytree(exported / export_folder, destination)
+    with tempfile.TemporaryDirectory(prefix="hoi4-focus-studio-") as temp:
+        staged_package = export_project(project, Path(temp))
+        staged_mod = staged_package / staged_package.name
+        validate_exported_mod(staged_mod)
+        staged_destination = Path(temp) / folder_name
+        shutil.copytree(staged_mod, staged_destination)
+        staged_descriptor = staged_destination / "descriptor.mod"
+        descriptor = staged_descriptor.read_text(encoding="utf-8-sig")
+        version = str(project.get("exportVersion", "0.78"))
+        display_name = project.get("modDisplayName", "Norway Remade")
+        version_label = version if version.lower().startswith("v") else f"v{version}"
+        descriptor = re.sub(r'(?m)^\s*name\s*=\s*"[^"]+"', f'name="{display_name} — {version_label}"', descriptor, count=1)
+        descriptor = re.sub(r'(?m)^\s*version\s*=\s*"[^"]+"', f'version="{version}"', descriptor, count=1)
+        staged_descriptor.write_text(descriptor, encoding="utf-8")
+        validate_exported_mod(staged_destination)
+        backup_root = ROOT / "backups"; backup_root.mkdir(exist_ok=True)
+        if destination.exists():
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            shutil.make_archive(str(backup_root/f"{folder_name}_{stamp}"), "zip", destination)
+            shutil.rmtree(destination)
+        shutil.move(str(staged_destination), destination)
     descriptor_path = destination / "descriptor.mod"
     descriptor = descriptor_path.read_text(encoding="utf-8-sig")
     version = str(project.get("exportVersion", "0.78"))
@@ -591,6 +622,23 @@ def install_test_build(project: dict) -> Path:
     external = descriptor + f'\npath="{destination.as_posix()}"\n'
     (hoi4_mods / f"{folder_name}.mod").write_text(external, encoding="utf-8")
     return destination
+
+
+def validate_exported_mod(mod_dir: Path) -> None:
+    """Validate a complete staged mod before an installed copy is replaced."""
+    required = [mod_dir / "descriptor.mod", mod_dir / "common" / "national_focus"]
+    missing = [str(path.relative_to(mod_dir)) for path in required if not path.exists()]
+    if missing:
+        raise ValueError("Staged mod is incomplete: " + ", ".join(missing))
+    focus_files = list((mod_dir / "common" / "national_focus").glob("*.txt"))
+    if not focus_files or not any("focus_tree" in path.read_text(encoding="utf-8-sig", errors="ignore") for path in focus_files):
+        raise ValueError("Staged mod has no readable focus tree.")
+    generated = mod_dir / "interface" / "NHO_editor_generated_focus_icons.gfx"
+    if generated.exists():
+        text = generated.read_text(encoding="utf-8-sig", errors="ignore")
+        for texture in re.findall(r'texturefile\s*=\s*"([^"]+)"', text, re.I):
+            if not (mod_dir / Path(texture.replace("/", os.sep))).is_file():
+                raise ValueError(f"Staged mod is missing sprite texture: {texture}")
 
 
 def _sprite_icon_map(text_files: dict[str, str]) -> dict[str, str]:
@@ -777,7 +825,7 @@ class Handler(SimpleHTTPRequestHandler):
                     old_backups = sorted(autosaves.glob("project_*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
                     for stale in old_backups[12:]:
                         stale.unlink(missing_ok=True)
-                PROJECT_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                PROJECT_FILE.write_text(json.dumps(public_project(data), ensure_ascii=False, indent=2), encoding="utf-8")
                 self.send_json({"ok": True})
             elif request_path == "/api/icon":
                 name = re.sub(r"[^A-Za-z0-9_-]", "_", data.get("name", "custom_focus"))
@@ -789,13 +837,14 @@ class Handler(SimpleHTTPRequestHandler):
                 image.save(out / f"{name}.dds")
                 self.send_json({"ok": True, "path": str(out / f'{name}.dds')})
             elif request_path == "/api/export":
+                export_root = selected_directory(data.get("exportPath"), "export destination")
                 current_version = str(data.get("exportVersion", "v0_80"))
                 bump = str(data.get("versionBump", "minor"))
                 export_version = _next_export_version(current_version, bump)
                 data["exportVersion"] = export_version
-                exported = export_project(data)
-                zip_path = _make_versioned_zip(exported, data, export_version)
-                PROJECT_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                exported = export_project(data, export_root)
+                zip_path = _make_versioned_zip(export_root, exported)
+                PROJECT_FILE.write_text(json.dumps(public_project(data), ensure_ascii=False, indent=2), encoding="utf-8")
                 opened = False
                 if data.get("openExportFolder", True):
                     try:
@@ -810,6 +859,13 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json({"ok": True, "path": str(exported), "zipPath": str(zip_path), "version": export_version, "opened": opened})
             elif request_path == "/api/install":
                 self.send_json({"ok": True, "path": str(install_test_build(data)), "note": "Enable Norway Remade in the HOI4 launcher. The stable .mod file is updated automatically."})
+            elif request_path == "/api/select-folder":
+                import tkinter as tk
+                from tkinter import filedialog
+                window = tk.Tk(); window.withdraw(); window.attributes("-topmost", True)
+                chosen = filedialog.askdirectory(title=str(data.get("title", "Choose folder")), mustexist=False)
+                window.destroy()
+                self.send_json({"ok": True, "path": chosen})
             elif request_path == "/api/import-mod":
                 imported, mode = import_mod_files(data.get("files", {}), data.get("binaryFiles", {}))
                 self.send_json({"ok": True, "project": imported, "mode": mode})

@@ -30,10 +30,12 @@
       <label>Current released version<input id="exportVersion" value="v0_80" placeholder="v0_80"></label>
       <label>Next export type<select id="versionBump"><option value="minor">New version (v0_80 → v0_81)</option><option value="hotfix">Small fix (v0_80 → v0_80_1)</option><option value="keep">Keep exact version</option></select></label>
       <label>Export file name preview<input id="exportNamePreview" readonly></label>
+      <label>Export destination<div class="path-picker"><input id="exportPath" placeholder="Choose where exports are saved"><button id="chooseExportPath" type="button">Choose…</button></div></label>
+      <label>Hearts of Iron IV mod folder<div class="path-picker"><input id="installPath" placeholder="Choose the game's mod folder"><button id="chooseInstallPath" type="button">Choose…</button></div></label>
       <label class="checkline"><input id="openExportFolder" type="checkbox" checked> Open export folder after normal export</label>
-      <p class="hint">A normal export advances the main version. A small fix adds or advances the final hotfix number. After a successful export, Studio remembers the exported version as the new current version.</p>
+      <p class="hint">These two paths are remembered only in this browser on this computer and are never stored in the project or exported mod.</p>
     </details>
-    <details><summary>Export and test instructions</summary><p class="hint"><strong>Install test build</strong> automatically exports and copies a separate test mod into <code>Documents\Paradox Interactive\Hearts of Iron IV\mod</code>. Open the HOI4 launcher, enable your exported test mod, and disable older copies of that mod. <strong>Export HOI4 mod</strong> creates a versioned ZIP and folder inside this Studio's <code>exports</code> folder.</p></details>
+    <details><summary>Export and test instructions</summary><p class="hint">Choose an export destination and your Hearts of Iron IV mod folder above. Install Test Build validates a staged mod before replacing the installed test copy.</p></details>
   </aside>
   <section id="viewport"><div id="world"><svg id="edges"></svg><div id="nodes"></div></div></section>
   <aside id="focusEditor" class="editor"><h2>Focus</h2><p>Select a focus.</p></aside>
