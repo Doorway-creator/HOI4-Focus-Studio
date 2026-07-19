@@ -11,6 +11,11 @@ import webbrowser
 import os
 import subprocess
 import tempfile
+import hashlib
+import sys
+import urllib.error
+import urllib.request
+import zipfile
 from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
@@ -22,6 +27,9 @@ ROOT = Path(__file__).resolve().parent
 PROJECT_FILE = ROOT / "projects" / "default_project.json"
 SOURCE_MOD = ROOT / "base_mod" / "Norwegian_Kings_Yes_DLC_Tree_Test"
 EXPORT_ROOT = ROOT / "exports"
+APP_VERSION = "6.10.0"
+GITHUB_RELEASES_API = "https://api.github.com/repos/Doorway-creator/HOI4-Focus-Studio/releases/latest"
+UPDATE_ROOT = ROOT / "updates"
 LOCAL_PATH_FIELDS = {"exportPath", "hoi4ModFolder"}
 
 
@@ -508,9 +516,7 @@ def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
     loc.extend(timed_localisation)
     (loc_dir / "NHO_editor_l_english.yml").write_text("\n".join(loc) + "\n", encoding="utf-8-sig")
 
-    # Copy converted focus icons and MERGE their sprite definitions.
-    # Never overwrite the base mod's icon registry: doing that made every older
-    # custom icon disappear in-game even though the Studio preview still worked.
+    # Copy project assets first, then resolve ownership from actual staged files.
     custom_icons = ROOT / "projects" / "icons"
     goal_dir = target / "gfx" / "interface" / "goals"
     goal_dir.mkdir(parents=True, exist_ok=True)
@@ -523,66 +529,107 @@ def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
             destination_icon = goal_dir / relative_icon
             destination_icon.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(icon, destination_icon)
-
-    # Read every existing .gfx file first so already-valid definitions are kept.
-    defined_names = set()
-    for gfx_file in interface_dir.rglob("*.gfx"):
-        try:
-            gfx_text = gfx_file.read_text(encoding="utf-8-sig", errors="ignore")
-        except OSError:
-            continue
-        defined_names.update(re.findall(r'\bname\s*=\s*"([^"]+)"', gfx_text))
-
-    # Build a map of every DDS under goals, including files in subfolders.
-    available_icons = {}
-    for icon in goal_dir.rglob("*.dds"):
-        rel = icon.relative_to(target).as_posix()
-        available_icons.setdefault(f"GFX_{icon.stem}", rel)
-
-    # Register every project icon plus every icon referenced by the focus tree.
-    requested_names = {f"GFX_{p.stem}" for p in custom_icons.rglob("*.dds")} if custom_icons.exists() else set()
-    requested_names.update(
-        str(focus.get("icon", "")).strip()
-        for focus in project.get("focuses", [])
-        if str(focus.get("icon", "")).strip().startswith("GFX_")
-    )
-
-    generated = []
-    missing = []
-    project_icon_names = {f"GFX_{p.stem}" for p in custom_icons.rglob("*.dds")} if custom_icons.exists() else set()
-    for sprite_name in sorted(requested_names):
-        if sprite_name in defined_names:
-            continue
-        texture_path = available_icons.get(sprite_name)
-        if not texture_path:
-            # Vanilla/DLC icons are resolved by HOI4 itself and are not expected
-            # to exist inside the exported mod. Only fail for Studio-owned icons
-            # or the mod's NHO namespace.
-            if sprite_name in project_icon_names or sprite_name.startswith("GFX_NHO_"):
-                missing.append(sprite_name)
-            continue
-        generated.extend([
-            "\tspriteType = {",
-            f'\t\tname = "{sprite_name}"',
-            f'\t\ttexturefile = "{texture_path}"',
-            "\t}",
-        ])
-        defined_names.add(sprite_name)
-
-    generated_file = interface_dir / "NHO_editor_generated_focus_icons.gfx"
-    if generated:
-        generated_file.write_text("spriteTypes = {\n" + "\n".join(generated) + "\n}\n", encoding="utf-8", newline="\n")
-    elif generated_file.exists():
-        generated_file.unlink()
-
-    if missing:
-        raise ValueError("Missing DDS files for referenced focus icons: " + ", ".join(missing))
+    icon_report = resolve_focus_icons(project, target, custom_icons)
+    report_text = json.dumps(icon_report, ensure_ascii=False, indent=2)
+    (package_dir / "focus_icon_export_report.json").write_text(report_text, encoding="utf-8")
+    (target / "focus_icon_export_report.json").write_text(report_text, encoding="utf-8")
     # This small sidecar makes a later folder import lossless. HOI4 ignores JSON.
     for focus in project.get("focuses", []):
         for action in focus.get("diplomacy", []):
             action.pop("_eventId", None)
     (target / "hoi4_focus_studio_project.json").write_text(json.dumps(public_project(project), ensure_ascii=False, indent=2), encoding="utf-8")
     return package_dir
+
+
+def _sprite_records(mod_dir: Path) -> list[dict]:
+    records = []
+    block_re = re.compile(r"spriteType\s*=\s*\{.*?\}", re.I | re.S)
+    for gfx_file in (mod_dir / "interface").rglob("*.gfx"):
+        text = gfx_file.read_text(encoding="utf-8-sig", errors="ignore")
+        for match in block_re.finditer(text):
+            name = re.search(r'\bname\s*=\s*"([^"]+)"', match.group(0), re.I)
+            texture = re.search(r'\btexturefile\s*=\s*"([^"]+)"', match.group(0), re.I)
+            if name and texture:
+                records.append({"name": name.group(1), "texture": texture.group(1).replace("\\", "/").lstrip("/"), "file": gfx_file, "block": match.group(0)})
+    return records
+
+
+def resolve_focus_icons(project: dict, mod_dir: Path, asset_library: Path) -> list[dict]:
+    """Resolve custom focus icons from files/definitions, never from key prefixes."""
+    interface_dir = mod_dir / "interface"; interface_dir.mkdir(parents=True, exist_ok=True)
+    goal_dir = mod_dir / "gfx" / "interface" / "goals"; goal_dir.mkdir(parents=True, exist_ok=True)
+    library_sources = {f"GFX_{path.stem}": f"projects/icons/{path.relative_to(asset_library).as_posix()}" for path in asset_library.rglob("*.dds")} if asset_library.exists() else {}
+    library_keys = set(library_sources)
+    for focus in project.get("focuses", []):
+        key = str(focus.get("icon", "")).strip()
+        if key.startswith("GFX_") and focus.get("iconImage") and not any(path.stem == key[4:] for path in goal_dir.rglob("*.dds")):
+            try:
+                raw = base64.b64decode(str(focus["iconImage"]).split(",", 1)[1])
+                image = Image.open(BytesIO(raw)).convert("RGBA").resize((95, 85), Image.Resampling.LANCZOS)
+                destination = goal_dir / "project" / f"{key[4:]}.dds"
+                destination.parent.mkdir(parents=True, exist_ok=True); image.save(destination)
+                library_keys.add(key)
+                library_sources[key] = f"project focus {focus.get('id', '')} iconImage"
+            except Exception as exc:
+                raise ValueError(f"Could not create DDS for {focus.get('id', 'focus')} ({key}): {exc}") from exc
+
+    records = _sprite_records(mod_dir)
+    dds_by_key = {}
+    for dds in (mod_dir / "gfx").rglob("*.dds"):
+        dds_by_key.setdefault(f"GFX_{dds.stem}", []).append(dds.relative_to(mod_dir).as_posix())
+    focus_keys = {str(f.get("icon", "")).strip() for f in project.get("focuses", []) if str(f.get("icon", "")).strip()}
+    record_keys_with_files = {
+        record["name"] for record in records
+        if (mod_dir / Path(record["texture"].replace("/", os.sep))).is_file()
+    }
+    custom_keys = library_keys | record_keys_with_files | (focus_keys & set(dds_by_key))
+    generated = []
+    chosen_paths = {}
+    for key in sorted(focus_keys & custom_keys):
+        candidates = dds_by_key.get(key, [])
+        valid_records = [r for r in records if r["name"] == key and (mod_dir / Path(r["texture"].replace("/", os.sep))).is_file()]
+        preferred = next((r["texture"] for r in valid_records if r["texture"] in candidates), candidates[0] if candidates else None)
+        if not preferred:
+            raise ValueError(f"Project-owned focus icon {key} has no DDS in the staged mod.")
+        chosen_paths[key] = preferred
+        key_records = [r for r in records if r["name"] == key]
+        if not key_records:
+            generated.extend(["\tspriteType = {", f'\t\tname = "{key}"', f'\t\ttexturefile = "{preferred}"', "\t}"])
+        else:
+            for gfx_file in {r["file"] for r in key_records}:
+                text = gfx_file.read_text(encoding="utf-8-sig", errors="ignore")
+                def normalize(match):
+                    block = match.group(0)
+                    name = re.search(r'\bname\s*=\s*"([^"]+)"', block, re.I)
+                    if not name or name.group(1) != key:
+                        return block
+                    return re.sub(r'(\btexturefile\s*=\s*")[^"]+("\s*)', rf'\g<1>{preferred}\g<2>', block, count=1, flags=re.I)
+                gfx_file.write_text(re.sub(r"spriteType\s*=\s*\{.*?\}", normalize, text, flags=re.I | re.S), encoding="utf-8")
+    generated_file = interface_dir / "NHO_editor_generated_focus_icons.gfx"
+    if generated:
+        old = generated_file.read_text(encoding="utf-8-sig", errors="ignore") if generated_file.exists() else "spriteTypes = {\n}\n"
+        generated_file.write_text(old.rsplit("}", 1)[0] + "\n" + "\n".join(generated) + "\n}\n", encoding="utf-8")
+
+    records = _sprite_records(mod_dir)
+    report = []
+    errors = []
+    for focus in project.get("focuses", []):
+        key = str(focus.get("icon", "")).strip()
+        owned = key in custom_keys
+        key_records = [r for r in records if r["name"] == key]
+        paths = {r["texture"] for r in key_records}
+        chosen = chosen_paths.get(key)
+        resolved = (not owned) or (bool(chosen) and (mod_dir / Path(chosen.replace("/", os.sep))).is_file() and paths == {chosen})
+        if owned and not resolved:
+            errors.append(f"{focus.get('id', 'focus')} ({key})")
+        report.append({
+            "focusId": focus.get("id", ""), "iconKey": key, "ownership": "custom" if owned else "vanilla",
+            "resolved": resolved, "ddsSource": (library_sources.get(key) or (f"project/imported mod:{chosen}" if owned and chosen else None)),
+            "exportedPath": chosen, "spriteDefinitionFile": next((r["file"].relative_to(mod_dir).as_posix() for r in key_records if r["texture"] == chosen), None),
+        })
+    if errors:
+        raise ValueError("Unresolved project-owned focus icons: " + ", ".join(errors))
+    return report
 
 
 def install_test_build(project: dict) -> Path:
@@ -633,6 +680,13 @@ def validate_exported_mod(mod_dir: Path) -> None:
     focus_files = list((mod_dir / "common" / "national_focus").glob("*.txt"))
     if not focus_files or not any("focus_tree" in path.read_text(encoding="utf-8-sig", errors="ignore") for path in focus_files):
         raise ValueError("Staged mod has no readable focus tree.")
+    report_path = mod_dir / "focus_icon_export_report.json"
+    if not report_path.is_file():
+        raise ValueError("Staged mod is missing its focus icon export report.")
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    unresolved = [row.get("focusId", "focus") for row in report if row.get("ownership") == "custom" and not row.get("resolved")]
+    if unresolved:
+        raise ValueError("Staged mod has unresolved project-owned icons: " + ", ".join(unresolved))
     generated = mod_dir / "interface" / "NHO_editor_generated_focus_icons.gfx"
     if generated.exists():
         text = generated.read_text(encoding="utf-8-sig", errors="ignore")
@@ -779,6 +833,86 @@ def import_mod_files(files: dict[str, str], binary_files: dict[str, str] | None 
     return imported, "Older mod detected: focus scripts and localisation were reconstructed." + note
 
 
+def _release_request(url: str) -> bytes:
+    request = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json", "User-Agent": f"HOI4-Focus-Studio/{APP_VERSION}"})
+    with urllib.request.urlopen(request, timeout=20) as response:
+        return response.read()
+
+
+def check_for_updates() -> dict:
+    try:
+        release = json.loads(_release_request(GITHUB_RELEASES_API))
+    except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
+        return {"ok": False, "offline": True, "installedVersion": APP_VERSION, "error": f"GitHub could not be reached: {exc}"}
+    assets = release.get("assets", [])
+    zip_asset = next((a for a in assets if a.get("name", "").lower().endswith("windows.zip")), None)
+    checksum_asset = next((a for a in assets if a.get("name", "").lower().endswith(".sha256")), None)
+    latest = str(release.get("tag_name", "")).lstrip("v")
+    current_tuple = tuple(int(x) for x in re.findall(r"\d+", APP_VERSION))
+    latest_tuple = tuple(int(x) for x in re.findall(r"\d+", latest))
+    return {"ok": True, "installedVersion": APP_VERSION, "latestVersion": latest, "updateAvailable": latest_tuple > current_tuple,
+            "releaseNotes": release.get("body", ""), "releaseUrl": release.get("html_url", ""), "downloadReady": bool(zip_asset and checksum_asset),
+            "zipUrl": zip_asset.get("browser_download_url") if zip_asset else None, "zipName": zip_asset.get("name") if zip_asset else None,
+            "checksumUrl": checksum_asset.get("browser_download_url") if checksum_asset else None}
+
+
+def verify_update_zip(zip_path: Path, checksum_path: Path) -> str:
+    if not zip_path.is_file() or not checksum_path.is_file():
+        raise ValueError("The update ZIP and its .sha256 checksum file are both required.")
+    expected = re.search(r"\b([a-fA-F0-9]{64})\b", checksum_path.read_text(encoding="utf-8-sig", errors="ignore"))
+    if not expected:
+        raise ValueError("The checksum file does not contain a valid SHA-256 value.")
+    digest = hashlib.sha256()
+    with zip_path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    actual = digest.hexdigest()
+    if actual.lower() != expected.group(1).lower():
+        raise ValueError("Update verification failed: the SHA-256 checksum does not match.")
+    return actual
+
+
+def download_update() -> dict:
+    release = check_for_updates()
+    if not release.get("ok") or not release.get("downloadReady"):
+        raise ValueError(release.get("error") or "This release has no Windows ZIP and checksum.")
+    UPDATE_ROOT.mkdir(parents=True, exist_ok=True)
+    zip_path = UPDATE_ROOT / Path(release["zipName"]).name
+    checksum_path = UPDATE_ROOT / (zip_path.name + ".sha256")
+    zip_path.write_bytes(_release_request(release["zipUrl"]))
+    checksum_path.write_bytes(_release_request(release["checksumUrl"]))
+    return {"ok": True, "version": release["latestVersion"], "path": str(zip_path), "sha256": verify_update_zip(zip_path, checksum_path)}
+
+
+def stage_update(zip_path: Path, checksum_path: Path) -> Path:
+    verify_update_zip(zip_path, checksum_path)
+    stage = UPDATE_ROOT / "staged"
+    if stage.exists():
+        shutil.rmtree(stage)
+    stage.mkdir(parents=True)
+    with zipfile.ZipFile(zip_path) as archive:
+        for member in archive.infolist():
+            destination = (stage / member.filename).resolve()
+            if stage.resolve() not in destination.parents and destination != stage.resolve():
+                raise ValueError("The update ZIP contains an unsafe path.")
+        archive.extractall(stage)
+    children = list(stage.iterdir())
+    payload = children[0] if len(children) == 1 and children[0].is_dir() else stage
+    if not ((payload / "HOI4 Focus Studio.exe").exists() or (payload / "server.py").exists()):
+        raise ValueError("The ZIP is not a valid HOI4 Focus Studio Windows update.")
+    return payload
+
+
+def launch_update(zip_path: Path, checksum_path: Path) -> None:
+    payload = stage_update(zip_path, checksum_path)
+    program_root = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else ROOT
+    executable = program_root / "HOI4 Focus Studio.exe" if getattr(sys, "frozen", False) else Path(sys.executable).resolve()
+    arguments = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "apply_update.ps1"), "-ProcessId", str(os.getpid()), "-InstallRoot", str(program_root), "-StagedRoot", str(payload), "-Executable", str(executable)]
+    if not getattr(sys, "frozen", False):
+        arguments.extend(["-ServerScript", str(ROOT / "server.py")])
+    subprocess.Popen(arguments, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+
+
 class Handler(SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
@@ -801,7 +935,10 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         request_path = self.path.split("?", 1)[0].rstrip("/") or "/"
         if request_path == "/api/version":
-            self.send_json({"version": "6.9.0-development-1", "port": 8766})
+            self.send_json({"version": APP_VERSION, "port": 8766})
+            return
+        if request_path == "/api/update/check":
+            self.send_json(check_for_updates())
             return
         if request_path == "/api/project":
             self.send_json(json.loads(PROJECT_FILE.read_text(encoding="utf-8")))
@@ -866,6 +1003,21 @@ class Handler(SimpleHTTPRequestHandler):
                 chosen = filedialog.askdirectory(title=str(data.get("title", "Choose folder")), mustexist=False)
                 window.destroy()
                 self.send_json({"ok": True, "path": chosen})
+            elif request_path == "/api/update/download":
+                self.send_json(download_update())
+            elif request_path == "/api/update/select-zip":
+                import tkinter as tk
+                from tkinter import filedialog
+                window = tk.Tk(); window.withdraw(); window.attributes("-topmost", True)
+                chosen = filedialog.askopenfilename(title="Choose HOI4 Focus Studio update ZIP", filetypes=[("ZIP update", "*.zip")])
+                window.destroy()
+                self.send_json({"ok": True, "path": chosen})
+            elif request_path == "/api/update/install":
+                zip_path = Path(str(data.get("path", ""))).resolve()
+                checksum_path = Path(str(data.get("checksumPath") or (str(zip_path) + ".sha256"))).resolve()
+                launch_update(zip_path, checksum_path)
+                self.send_json({"ok": True, "message": "Update verified. Studio will close, replace program files, and reopen."})
+                threading.Timer(0.5, self.server.shutdown).start()
             elif request_path == "/api/import-mod":
                 imported, mode = import_mod_files(data.get("files", {}), data.get("binaryFiles", {}))
                 self.send_json({"ok": True, "project": imported, "mode": mode})

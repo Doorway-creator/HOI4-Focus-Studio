@@ -62,5 +62,7 @@ Country and News event editors now use HOI4-matched visual frames. Adjust pictur
 
 PRIVACY
 - The public build contains no user project files, account names, home-directory paths, IP addresses, API keys, tokens, or analytics.
+- Help → Check for updates reads public GitHub Releases, shows release notes, and verifies the Windows ZIP against its published SHA-256 checksum before installation. Download and installation require separate confirmation.
+- Updates replace program files only. Projects, exports, backups, imports, selected paths, settings, and downloaded update files are preserved. A manual verified ZIP option is available when automatic download is unavailable.
 - The program does not contact the developer's computer. Online updates, when enabled later, will only use public GitHub release endpoints.
 - Projects and exports remain local on the user's computer.

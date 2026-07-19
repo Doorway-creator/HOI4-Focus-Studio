@@ -7,7 +7,7 @@ on:
       - "v*"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -32,14 +32,31 @@ jobs:
             --add-data "icon-previews;icon-previews" `
             --add-data "base_mod;base_mod" `
             --add-data "projects/default_project.json;projects" `
+            --add-data "apply_update.ps1;." `
             server.py
       - name: Privacy scan build output
         shell: pwsh
         run: |
           $patterns = 'gmail\.com|api[_-]?key|bearer|authorization|C:\\Users\\'
-          $hits = Get-ChildItem -Recurse dist -File | Where-Object { $_.Extension -match '\.(txt|json|js|html|css|py|mod|yml|yaml|ini|cfg)$' } | Select-String -Pattern $patterns -CaseSensitive:$false
+          $hits = Get-ChildItem -Recurse dist -File | Where-Object { $_.Extension -match '\.(txt|json|js|html|css|py|ps1|mod|yml|yaml|ini|cfg)$' } | Select-String -Pattern $patterns -CaseSensitive:$false
           if ($hits) { $hits | Format-Table; throw 'Privacy scan failed.' }
+      - name: Package release ZIP and checksum
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist/HOI4 Focus Studio" -DestinationPath "HOI4-Focus-Studio-Windows.zip"
+          $hash = (Get-FileHash "HOI4-Focus-Studio-Windows.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  HOI4-Focus-Studio-Windows.zip" | Set-Content -Encoding ascii "HOI4-Focus-Studio-Windows.zip.sha256"
       - uses: actions/upload-artifact@v4
         with:
           name: HOI4-Focus-Studio-Windows
-          path: dist/HOI4 Focus Studio/
+          path: |
+            HOI4-Focus-Studio-Windows.zip
+            HOI4-Focus-Studio-Windows.zip.sha256
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: RELEASE_NOTES.md
+          files: |
+            HOI4-Focus-Studio-Windows.zip
+            HOI4-Focus-Studio-Windows.zip.sha256

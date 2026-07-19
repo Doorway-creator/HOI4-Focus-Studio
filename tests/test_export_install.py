@@ -18,7 +18,7 @@ class ExportInstallTests(unittest.TestCase):
         (self.source / "common" / "national_focus" / "norway.txt").write_text(
             "focus_tree = {\nid = test\nfocus = { id = placeholder }\n}\n", encoding="utf-8"
         )
-        self.patches = [patch("server.ROOT", self.root), patch("server.SOURCE_MOD", self.source)]
+        self.patches = [patch("server.ROOT", self.root), patch("server.SOURCE_MOD", self.source), patch("server.UPDATE_ROOT", self.root / "updates")]
         for item in self.patches:
             item.start()
 
@@ -67,6 +67,36 @@ class ExportInstallTests(unittest.TestCase):
             text = generated.read_text(encoding="utf-8")
             self.assertIn('texturefile = "gfx/interface/goals/nested/NHO_focus_test.dds"', text)
             self.assertTrue((mod / "gfx" / "interface" / "goals" / "nested" / "NHO_focus_test.dds").is_file())
+
+    def test_vanilla_looking_names_are_custom_when_a_project_dds_exists(self):
+        for key in ("GFX_focus_NOR_arms_industry", "GFX_focus_generic_shipyard", "GFX_goal_generic_merchant_marine"):
+            with self.subTest(key=key), tempfile.TemporaryDirectory() as temp:
+                icon = self.root / "projects" / "icons" / f"{key[4:]}.dds"
+                icon.parent.mkdir(parents=True, exist_ok=True); icon.write_bytes(b"dds fixture")
+                project = self.project(); project["focuses"] = [{"id": "example", "icon": key, "x": 0, "y": 0}]
+                package = server.export_project(project, Path(temp)); mod = package / package.name
+                report = json.loads((package / "focus_icon_export_report.json").read_text(encoding="utf-8"))
+                self.assertEqual(report[0]["ownership"], "custom")
+                self.assertTrue(report[0]["resolved"])
+                self.assertEqual(report[0]["iconKey"], key)
+                self.assertTrue((mod / report[0]["exportedPath"]).is_file())
+                definition = mod / report[0]["spriteDefinitionFile"]
+                self.assertIn(key, definition.read_text(encoding="utf-8"))
+
+    def test_conflicting_custom_sprite_definitions_are_normalized_to_one_real_dds(self):
+        key = "GFX_focus_NOR_hovland_mines"
+        interface = self.source / "interface"; interface.mkdir()
+        for folder in ("one", "two"):
+            dds = self.source / "gfx" / "interface" / "goals" / folder / "focus_NOR_hovland_mines.dds"
+            dds.parent.mkdir(parents=True, exist_ok=True); dds.write_bytes(folder.encode())
+        (interface / "first.gfx").write_text(f'spriteTypes = {{ spriteType = {{ name = "{key}" texturefile = "gfx/interface/goals/one/focus_NOR_hovland_mines.dds" }} }}', encoding="utf-8")
+        (interface / "second.gfx").write_text(f'spriteTypes = {{ spriteType = {{ name = "{key}" texturefile = "gfx/interface/goals/two/focus_NOR_hovland_mines.dds" }} }}', encoding="utf-8")
+        project = self.project(); project["focuses"] = [{"id": "mines", "icon": key, "x": 0, "y": 0}]
+        with tempfile.TemporaryDirectory() as temp:
+            package = server.export_project(project, Path(temp)); mod = package / package.name
+            paths = {record["texture"] for record in server._sprite_records(mod) if record["name"] == key}
+            self.assertEqual(len(paths), 1)
+            self.assertTrue((mod / next(iter(paths))).is_file())
 
     def test_invalid_staging_does_not_replace_installed_mod(self):
         with tempfile.TemporaryDirectory() as temp:

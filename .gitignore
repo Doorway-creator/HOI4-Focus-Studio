@@ -3,6 +3,7 @@ __pycache__/
 exports/
 backups/
 imports/
+updates/
 projects/*.json
 !projects/default_project.json
 *.spec

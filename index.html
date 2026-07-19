@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HOI4 Focus Studio v6.9 Development Build 3</title>
+<title>HOI4 Focus Studio v6.10.0</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
   </label>
   <span id="mapProfileBadge" class="profile-badge">Loading map…</span>
   <span id="status">Loading…</span>
-  <button id="undo">Undo</button><button id="redo">Redo</button><button id="save">Save project</button><button id="export">Export HOI4 mod</button><button id="install" class="primary">Install test build</button>
+  <button id="undo">Undo</button><button id="redo">Redo</button><button id="save">Save project</button><button id="export">Export HOI4 mod</button><button id="install" class="primary">Install test build</button><button id="helpUpdates">Help → Check for updates</button>
 </header>
 
 <main id="treeTab" class="tab active">
@@ -104,6 +104,13 @@
   <div class="province-picker-foot"><strong id="provinceHover">Move over a province</strong><span id="provinceSelection" class="hint">Build a queue, then add all selected rewards.</span></div>
 </dialog>
 <dialog id="message"><p></p><button>OK</button></dialog>
+<dialog id="updateDialog" class="update-dialog">
+  <h2>HOI4 Focus Studio updates</h2>
+  <p id="updateVersions">Installed version: checking…</p>
+  <p id="updateStatus" class="hint"></p>
+  <h3>Release notes</h3><pre id="updateNotes">Check for updates to load release notes.</pre>
+  <div class="update-actions"><button id="closeUpdates">Close</button><button id="manualUpdate">Install update from ZIP…</button><button id="downloadUpdate" disabled>Download update</button><button id="installUpdate" class="primary" disabled>Install update</button></div>
+</dialog>
 <div id="contextMenu" class="context-menu" hidden></div>
 <script src="app.js"></script>
 </body>
