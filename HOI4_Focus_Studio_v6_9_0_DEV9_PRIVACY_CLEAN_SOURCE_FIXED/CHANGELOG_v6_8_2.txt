@@ -1,0 +1,7 @@
+HOI4 Focus Studio v6.8.2 — Export Safety Fix
+
+- Fixes effect-only Advanced Raw Blocks corrupting the exported focus tree.
+- Wraps raw reward fragments in a complete focus block automatically.
+- Rejects/traps malformed incomplete focus blocks instead of writing loose HOI4 commands.
+- Includes the latest Norway Remade project and base mod from NorMod2.
+- Retains all v6.8.1 construction planner, map picker, national spirit, icon and BOM fixes.

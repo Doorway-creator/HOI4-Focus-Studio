@@ -1,0 +1,13 @@
+HOI4 Focus Studio v6.9.0 DEV8
+
+- Added no-code event scheduling:
+  * fire after a selected focus
+  * optional delay in days after focus completion
+  * fire once on a selected game date for a chosen country tag
+  * manual/advanced trigger mode remains available
+- Added no-code event-option reward builder for political power, stability,
+  war support, manpower, command power, army/navy/air XP, ideology popularity,
+  and adding/removing national spirits.
+- Date events export through a safe daily on_action with a one-time country flag.
+- HOI4 only supports game-date scheduling here; it does not support clock-hour
+  event scheduling.

@@ -1,0 +1,16 @@
+HOI4 Focus Studio v6 - Diplomacy and Mod Re-import
+
+- Focuses can request a non-aggression pact from a European nation or Canada.
+- Focuses can ask another nation to guarantee Norway.
+- Focuses can demand one or more state IDs, with an optional war goal on refusal.
+- Territory demands and state war goals now include a named, country-filtered state
+  picker with state IDs and population; manual ID entry remains available.
+- Focuses can grant take-state, claimed-state, annexation, or puppet war goals.
+- Requests export as accept/refuse country events sent to the selected nation.
+- Added an Import Mod page with folder selection and folder drag-and-drop.
+- New exports contain hoi4_focus_studio_project.json for lossless re-import.
+- Older exports without the sidecar fall back to focus-script/localisation recovery.
+- The repaired prerequisite and mutually-exclusive connection importer is retained.
+
+HOI4 ignores the JSON sidecar. It exists only so Focus Studio can reopen its own
+exports without losing editor-only data such as visual links and exact positions.

@@ -1,0 +1,827 @@
+from __future__ import annotations
+
+import base64
+import importlib.util
+import json
+import re
+import shutil
+import threading
+import time
+import webbrowser
+import os
+import subprocess
+from datetime import datetime
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from io import BytesIO
+from pathlib import Path
+
+from PIL import Image
+
+ROOT = Path(__file__).resolve().parent
+PROJECT_FILE = ROOT / "projects" / "default_project.json"
+SOURCE_MOD = ROOT / "base_mod" / "Norwegian_Kings_Yes_DLC_Tree_Test"
+EXPORT_ROOT = ROOT / "exports"
+
+
+def matching_brace(text: str, opening: int) -> int:
+    depth = 0
+    quoted = False
+    escaped = False
+    for i in range(opening, len(text)):
+        c = text[i]
+        if quoted:
+            if escaped:
+                escaped = False
+            elif c == "\\":
+                escaped = True
+            elif c == '"':
+                quoted = False
+        elif c == '"':
+            quoted = True
+        elif c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                return i
+    raise ValueError("Unmatched brace")
+
+
+def replace_line(block: str, key: str, value: str) -> str:
+    pattern = rf"(?m)^(\s*){re.escape(key)}\s*=.*$"
+    if re.search(pattern, block):
+        return re.sub(pattern, rf"\1{key} = {value}", block, count=1)
+    return block.replace("\n", f"\n\t\t{key} = {value}\n", 1)
+
+
+def timed_idea_id(focus_id: str, index: int) -> str:
+    return re.sub(r"[^A-Za-z0-9_]", "_", f"NHO_editor_timed_{focus_id}_{index}")
+
+
+def generated_effect_scripts(focus: dict) -> list[str]:
+    scripts = []
+    for index, effect in enumerate(focus.get("effects", [])):
+        category, kind = effect.get("category"), effect.get("type")
+        amount = float(effect.get("amount", 0))
+        duration = int(effect.get("duration", 0) or 0)
+        if category == "political":
+            if duration > 0 and kind in {"political_power", "stability", "war_support"}:
+                scripts.append(f"add_timed_idea = {{ idea = {timed_idea_id(focus['id'], index)} days = {duration} }}")
+            elif kind == "political_power": scripts.append(f"add_political_power = {amount:g}")
+            elif kind == "stability": scripts.append(f"add_stability = {amount/100:g}")
+            elif kind == "war_support": scripts.append(f"add_war_support = {amount/100:g}")
+            elif kind == "popularity": scripts.append(f"add_popularity = {{ ideology = {effect.get('ideology','neutrality')} popularity = {amount/100:g} }}")
+        elif category == "state":
+            state = int(effect.get("state", 0)); level = max(1, int(amount)); province = int(effect.get("province", 0) or 0)
+            if not state: continue
+            construction = f"add_building_construction = {{ type = {kind} level = {level} instant_build = yes"
+            if kind in {"bunker", "coastal_bunker", "naval_base"} and province:
+                construction += f" province = {province}"
+            construction += " }"
+            extras = []
+            if kind in {"industrial_complex", "arms_factory", "dockyard"}:
+                extras.append(f"add_extra_state_shared_building_slots = {level}")
+            extras.append(construction)
+            scripts.append(f"{state} = {{ " + " ".join(extras) + " }")
+        elif category == "technology":
+            technology = re.sub(r"[^A-Za-z0-9_]", "", effect.get("technology", ""))
+            if not technology: continue
+            if kind == "unlock": scripts.append(f"set_technology = {{ {technology} = 1 }}")
+            else:
+                bonus = float(effect.get("amount", 50)) / 100
+                name = re.sub(r"[^A-Za-z0-9_]", "_", f"NHO_editor_{focus['id']}_{technology}_bonus")
+                scripts.append(f"add_tech_bonus = {{ name = {name} bonus = {bonus:g} uses = 1 technology = {technology} }}")
+    return scripts
+
+
+def diplomacy_focus_scripts(focus: dict) -> list[str]:
+    scripts = []
+    for action in focus.get("diplomacy", []):
+        target = re.sub(r"[^A-Z0-9_]", "", action.get("target", ""))
+        if not target:
+            continue
+        states = [int(x) for x in re.findall(r"\d+", str(action.get("states", "")))]
+        if action.get("type") == "war_goal":
+            goal = re.sub(r"[^A-Za-z0-9_]", "", action.get("warGoalType", "take_state_focus"))
+            generator = f" generator = {{ {' '.join(map(str, states))} }}" if states else ""
+            scripts.append(f"create_wargoal = {{ type = {goal} target = {target}{generator} }}")
+        elif action.get("_eventId"):
+            scripts.append(f"{target} = {{ country_event = {{ id = {action['_eventId']} }} }}")
+    return scripts
+
+
+def render_focus(focus: dict, events: list[dict], decisions: list[dict], characters: list[dict], national_spirits: list[dict]) -> str:
+    raw = str(focus.get("raw", "") or "").strip()
+
+    # The editor historically allowed the Advanced Raw Block field to contain
+    # either a complete `focus = { ... }` block or only one/more reward effects.
+    # The old exporter treated effect-only text as a complete focus, producing
+    # loose commands outside any focus block and making HOI4 reject the tree.
+    # Normalize effect-only/malformed raw text into a valid focus block first.
+    is_complete_focus = False
+    focus_match = re.search(r"\bfocus\s*=\s*\{", raw)
+    if focus_match:
+        try:
+            opening = raw.find("{", focus_match.start(), focus_match.end())
+            closing = matching_brace(raw, opening)
+            is_complete_focus = not raw[closing + 1:].strip()
+        except (ValueError, IndexError):
+            is_complete_focus = False
+
+    if not is_complete_focus:
+        reward_fragment = raw if raw else "add_political_power = 50"
+        reward_lines = "\n".join("\t\t\t" + line.strip() for line in reward_fragment.splitlines() if line.strip())
+        raw = (
+            "focus = {\n"
+            "\t\tid = NEW_FOCUS\n"
+            "\t\ticon = GFX_goal_generic_political_pressure\n"
+            "\t\tx = 0\n"
+            "\t\ty = 0\n"
+            "\t\tcost = 10\n"
+            "\t\tcompletion_reward = {\n"
+            f"{reward_lines}\n"
+            "\t\t}\n"
+            "\t}"
+        )
+    raw = replace_line(raw, "id", focus["id"])
+    raw = replace_line(raw, "icon", focus.get("icon") or "GFX_goal_generic_political_pressure")
+    raw = replace_line(raw, "x", str(round(focus.get("x", 0))))
+    raw = replace_line(raw, "y", str(round(focus.get("y", 0))))
+    raw = re.sub(r"(?m)^\s*relative_position_id\s*=.*\n?", "", raw)
+    raw = re.sub(r"(?m)^\s*prerequisite\s*=\s*\{[^\n]*\}\s*\n?", "", raw)
+    raw = re.sub(r"(?m)^\s*mutually_exclusive\s*=\s*\{[^\n]*\}\s*\n?", "", raw)
+    insert = []
+    for source in focus.get("prerequisites", []):
+        insert.append(f"\t\tprerequisite = {{ focus = {source} }}")
+    mutual = focus.get("mutuallyExclusive", [])
+    if mutual:
+        insert.append("\t\tmutually_exclusive = { " + " ".join(f"focus = {x}" for x in mutual) + " }")
+    if insert:
+        marker = re.search(r"(?m)^\s*icon\s*=.*$", raw)
+        pos = marker.end() if marker else raw.find("\n")
+        raw = raw[:pos] + "\n" + "\n".join(insert) + raw[pos:]
+    linked = [event for event in events if event.get("linkedFocus") == focus["id"]]
+    generated = generated_effect_scripts(focus) + diplomacy_focus_scripts(focus)
+    generated.extend(f"add_ideas = {sp['id']}" for sp in national_spirits if sp.get("grantedByFocus") == focus["id"])
+    generated.extend(f"remove_ideas = {sp['id']}" for sp in national_spirits if sp.get("removedByFocus") == focus["id"])
+    linked_decisions = [decision for decision in decisions if decision.get("linkedFocus") == focus["id"]]
+    linked_characters = [character for character in characters if character.get("linkedFocus") == focus["id"]]
+    if linked or generated or linked_decisions or linked_characters:
+        reward = re.search(r"completion_reward\s*=\s*\{", raw)
+        if reward:
+            opening = raw.find("{", reward.start(), reward.end())
+            closing = matching_brace(raw, opening)
+            calls = []
+            for event in linked:
+                delay = max(0, int(event.get('delayDays', 0) or 0))
+                suffix = f" days = {delay}" if delay else ""
+                call = f"{event.get('kind', 'country_event')} = {{ id = {event['id']}{suffix} }}"
+                if event["id"] not in raw[opening:closing]:
+                    calls.append("\t\t\t" + call)
+            calls.extend("\t\t\t" + effect for effect in generated)
+            calls.extend("\t\t\tunlock_decision_tooltip = " + decision["id"] for decision in linked_decisions)
+            calls.extend("\t\t\trecruit_character = " + character["id"] for character in linked_characters)
+            if calls:
+                raw = raw[:closing] + "\n" + "\n".join(calls) + "\n\t\t" + raw[closing:]
+    return "\t" + raw.lstrip()
+
+
+def _normalize_version(value: str) -> tuple[int, int, int | None]:
+    nums = [int(x) for x in re.findall(r"\d+", str(value or "v0_80"))]
+    if len(nums) == 1:
+        nums.insert(0, 0)
+    major = nums[0] if nums else 0
+    minor = nums[1] if len(nums) > 1 else 80
+    fix = nums[2] if len(nums) > 2 else None
+    return major, minor, fix
+
+
+def _next_export_version(current: str, bump: str) -> str:
+    major, minor, fix = _normalize_version(current)
+    if bump == "minor":
+        return f"v{major}_{minor + 1}"
+    if bump == "hotfix":
+        return f"v{major}_{minor}_{(fix or 0) + 1}"
+    return f"v{major}_{minor}" + (f"_{fix}" if fix is not None else "")
+
+
+def _make_versioned_zip(export_parent: Path, project: dict, version: str) -> Path:
+    folder_name = re.sub(r"[^A-Za-z0-9_-]", "_", project.get("exportFolder", "Norway_Remade"))
+    safe_version = re.sub(r"[^A-Za-z0-9_-]", "_", version)
+    zip_base = export_parent / f"{folder_name}_{safe_version}"
+    zip_path = Path(str(zip_base) + ".zip")
+    if zip_path.exists():
+        zip_path.unlink()
+    shutil.make_archive(str(zip_base), "zip", export_parent, folder_name)
+    return zip_path
+
+
+def export_project(project: dict) -> Path:
+    version = re.sub(r"[^A-Za-z0-9_.-]", "_", project.get("exportVersion", "v077_editor_export"))
+    folder_name = re.sub(r"[^A-Za-z0-9_-]", "_", project.get("exportFolder", "Norway_Remade"))
+    target = EXPORT_ROOT / version / folder_name
+    if target.parent.exists():
+        shutil.rmtree(target.parent)
+    shutil.copytree(SOURCE_MOD, target)
+    descriptor = (target / "descriptor.mod").read_text(encoding="utf-8-sig")
+    descriptor = re.sub(r'(?m)^\s*version\s*=\s*"[^"]+"', f'version="{version}"', descriptor, count=1)
+    display_name = project.get('modDisplayName', 'Norway Remade')
+    version_label = version if str(version).lower().startswith('v') else f'v{version}'
+    descriptor = re.sub(r'(?m)^\s*name\s*=\s*"[^"]+"', f'name="{display_name} — {version_label}"', descriptor, count=1)
+    (target / "descriptor.mod").write_text(descriptor, encoding="utf-8")
+    external = descriptor + f'\npath="mod/{folder_name}"\n'
+    (target.parent / f"{folder_name}.mod").write_text(external, encoding="utf-8")
+    focus_file = target / "common" / "national_focus" / "norway.txt"
+    old = focus_file.read_text(encoding="utf-8-sig")
+    tree_start = old.find("focus_tree = {")
+    opening = old.find("{", tree_start)
+    header_end = old.find("focus = {", opening)
+    header = old[:header_end]
+    diplomacy_actions = []
+    for focus in project.get("focuses", []):
+        for action in focus.get("diplomacy", []):
+            if action.get("type") != "war_goal":
+                action["_eventId"] = f"NHO_diplomacy.{len(diplomacy_actions) + 1}"
+                diplomacy_actions.append((focus, action))
+    rendered = "\n\n".join(render_focus(x, project.get("events", []), project.get("decisions", []), project.get("characters", []), project.get("nationalSpirits", [])) for x in project.get("focuses", []))
+    focus_file.write_text(header + rendered + "\n}\n", encoding="utf-8")
+
+    events_dir = target / "events"
+    events_dir.mkdir(parents=True, exist_ok=True)
+    namespace = project.get("eventNamespace", "NHO_editor")
+    event_lines = [f"add_namespace = {namespace}", ""]
+    for event in project.get("events", []):
+        kind = event.get("kind", "country_event")
+        trigger_mode = event.get("triggerMode", "focus" if event.get("linkedFocus") else "manual")
+        event_lines.extend([
+            f"{kind} = {{", f"\tid = {event['id']}", f"\ttitle = {event.get('titleKey', event['id'] + '.t')}",
+            f"\tdesc = {event.get('descKey', event['id'] + '.d')}", f"\tpicture = {event.get('picture', 'GFX_report_event_generic_read_write')}",
+            "\tis_triggered_only = yes", f"\ttrigger = {{ {event.get('trigger', 'always = yes')} }}",
+        ])
+        for option in event.get("options", []):
+            event_lines.extend(["\toption = {", f"\t\tname = {option.get('nameKey', event['id'] + '.a')}", f"\t\t{option.get('effect', 'add_political_power = 10')}", "\t}"])
+        event_lines.extend(["}", ""])
+    (events_dir / "NHO_editor_events.txt").write_text("\n".join(event_lines), encoding="utf-8")
+
+    # Date-driven events are fired from an on_daily hook. HOI4 does not have
+    # a real clock-hour selector for scripted events, so the chosen day is the
+    # precise scheduling unit. A country flag prevents repeats and also makes
+    # late-loaded saves catch up safely.
+    dated_events = [e for e in project.get("events", []) if e.get("triggerMode") == "date"]
+    if dated_events:
+        from datetime import date, timedelta
+        on_actions_dir = target / "common" / "on_actions"
+        on_actions_dir.mkdir(parents=True, exist_ok=True)
+        lines = ["on_actions = {", "\ton_daily = {", "\t\teffect = {"]
+        for event in dated_events:
+            try:
+                chosen = date(int(event.get("dateYear", 1936)), int(event.get("dateMonth", 1)), int(event.get("dateDay", 1)))
+            except ValueError:
+                chosen = date(1936, 1, 1)
+            previous = chosen - timedelta(days=1)
+            tag = re.sub(r"[^A-Z]", "", str(event.get("dateCountry", "NOR")).upper())[:3] or "NOR"
+            flag = "NHO_event_fired_" + re.sub(r"[^A-Za-z0-9_]", "_", event["id"])
+            call_kind = event.get("kind", "country_event")
+            lines.extend([
+                "\t\t\tif = {",
+                f"\t\t\t\tlimit = {{ original_tag = {tag} date > {previous.year}.{previous.month}.{previous.day} NOT = {{ has_country_flag = {flag} }} }}",
+                f"\t\t\t\tset_country_flag = {flag}",
+                f"\t\t\t\t{call_kind} = {{ id = {event['id']} }}",
+                "\t\t\t}",
+            ])
+        lines.extend(["\t\t}", "\t}", "}", ""])
+        (on_actions_dir / "NHO_editor_scheduled_events.txt").write_text("\n".join(lines), encoding="utf-8")
+
+    if diplomacy_actions:
+        dip_lines = ["add_namespace = NHO_diplomacy", ""]
+        for focus, action in diplomacy_actions:
+            event_id = action["_eventId"]
+            target_tag = re.sub(r"[^A-Z0-9_]", "", action.get("target", "SWE"))
+            kind = action.get("type", "non_aggression")
+            states = [int(x) for x in re.findall(r"\d+", str(action.get("states", "")))]
+            dip_lines.extend(["country_event = {", f"\tid = {event_id}", f"\ttitle = {event_id}.t", f"\tdesc = {event_id}.d", "\tpicture = GFX_report_event_generic_diplomacy", "\tis_triggered_only = yes", "\toption = {", f"\t\tname = {event_id}.a", "\t\tai_chance = { base = 50 }"])
+            if kind == "non_aggression":
+                dip_lines.append("\t\tdiplomatic_relation = { country = FROM relation = non_aggression_pact active = yes }")
+            elif kind == "guarantee":
+                dip_lines.append("\t\tgive_guarantee = FROM")
+            elif kind == "demand_land":
+                dip_lines.extend(f"\t\t{state} = {{ transfer_state_to = FROM }}" for state in states)
+            dip_lines.extend(["\t}", "\toption = {", f"\t\tname = {event_id}.b", "\t\tai_chance = { base = 50 }"])
+            if kind == "demand_land" and action.get("warOnRefusal"):
+                generator = f" generator = {{ {' '.join(map(str, states))} }}" if states else ""
+                dip_lines.append(f"\t\tFROM = {{ create_wargoal = {{ type = take_state_focus target = ROOT{generator} }} }}")
+            dip_lines.extend(["\t}", "}", ""])
+        (events_dir / "NHO_diplomacy_events.txt").write_text("\n".join(dip_lines), encoding="utf-8")
+
+    decisions = project.get("decisions", [])
+    if decisions:
+        category_dir = target / "common" / "decisions" / "categories"; category_dir.mkdir(parents=True, exist_ok=True)
+        (category_dir / "NHO_editor_categories.txt").write_text("NHO_editor_decision_category = { icon = GFX_decision_generic_political_address visible = { always = yes } }\n", encoding="utf-8")
+        decision_dir = target / "common" / "decisions"; decision_dir.mkdir(parents=True, exist_ok=True)
+        lines = ["NHO_editor_decision_category = {"]; permanent_ideas = ["ideas = {", "\tcountry = {"]; has_permanent_ideas = False
+        for decision in decisions:
+            did = re.sub(r"[^A-Za-z0-9_]", "_", decision["id"]); duration = max(1, int(decision.get("duration", 100))); cost = max(0, int(decision.get("cost", 0))); amount = float(decision.get("amount", 0)); effect_type = decision.get("effectType", "manpower"); linked_focus = decision.get("linkedFocus", "")
+            lines.extend([f"\t{did} = {{", "\t\ticon = GFX_decision_generic_political_address", f"\t\tcost = {cost}", f"\t\tdays_remove = {duration}", f"\t\tvisible = {{ {'has_completed_focus = ' + linked_focus if linked_focus else 'always = yes'} }}"])
+            completion = []
+            if effect_type == "political_power": completion.append(f"add_political_power = {amount:g}")
+            elif effect_type == "manpower": completion.append(f"add_manpower = {amount:g}")
+            elif effect_type == "manpower_factor":
+                if decision.get("permanent"):
+                    idea = f"NHO_editor_decision_idea_{did}"; completion.append(f"add_ideas = {idea}"); permanent_ideas.extend([f"\t\t{idea} = {{", "\t\t\tallowed = { always = no }", "\t\t\tremoval_cost = -1", f"\t\t\tmodifier = {{ recruitable_population_factor = {amount/100:g} }}", "\t\t}"]); has_permanent_ideas = True
+                else: lines.append(f"\t\tmodifier = {{ recruitable_population_factor = {amount/100:g} }}")
+            completion.extend(f"recruit_character = {character['id']}" for character in project.get("characters", []) if character.get("linkedDecision") == decision["id"])
+            if completion: lines.append("\t\tcomplete_effect = { " + " ".join(completion) + " }")
+            lines.extend(["\t}", ""])
+        lines.append("}"); (decision_dir / "NHO_editor_decisions.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        if has_permanent_ideas:
+            permanent_ideas.extend(["\t}", "}"]); ideas_dir = target / "common" / "ideas"; ideas_dir.mkdir(parents=True, exist_ok=True); (ideas_dir / "NHO_editor_decision_ideas.txt").write_text("\n".join(permanent_ideas) + "\n", encoding="utf-8")
+
+    characters = project.get("characters", [])
+    if characters:
+        char_dir = target / "common" / "characters"; char_dir.mkdir(parents=True, exist_ok=True); portrait_dir = target / "gfx" / "leaders" / "NHO_editor"; portrait_dir.mkdir(parents=True, exist_ok=True); lines = ["characters = {"]
+        for character in characters:
+            cid = re.sub(r"[^A-Za-z0-9_]", "_", character["id"]); role = character.get("role", "General"); skill = max(1, min(10, int(character.get("skill", 2)))); attack = max(0, min(10, int(character.get("attack", skill)))); defense = max(0, min(10, int(character.get("defense", skill)))); planning = max(0, min(10, int(character.get("planning", skill)))); logistics = max(0, min(10, int(character.get("logistics", skill)))); maneuvering = max(0, min(10, int(character.get("maneuvering", skill)))); coordination = max(0, min(10, int(character.get("coordination", skill)))); portrait = f"gfx/leaders/NHO_editor/{cid}.dds"; data_url = character.get("portraitData")
+            if data_url:
+                image = Image.open(BytesIO(base64.b64decode(data_url.split(",", 1)[1]))).convert("RGBA"); image.thumbnail((156, 210), Image.Resampling.LANCZOS); canvas = Image.new("RGBA", (156, 210), (0, 0, 0, 0)); canvas.alpha_composite(image, ((156-image.width)//2, (210-image.height)//2)); canvas.save(target / portrait)
+            lines.extend([f"\t{cid} = {{", f'\t\tname = "{character.get("name", cid).replace(chr(34), chr(39))}"']); portrait_kind = "navy" if role in ("Admiral", "Captain") else "army"
+            if data_url: lines.append(f'\t\tportraits = {{ {portrait_kind} = {{ large = "{portrait}" }} }}')
+            availability = str(character.get("availability", "")).strip()
+            if availability: lines.extend(["\t\tallowed = {", *["\t\t\t" + line for line in availability.splitlines()], "\t\t}"])
+            traits = " ".join(re.findall(r"[A-Za-z0-9_]+", str(character.get("traits", ""))))
+            trait_script = f" traits = {{ {traits} }}" if traits else ""
+            if role in ("Admiral", "Captain"): lines.append(f"\t\tnavy_leader = {{ skill = {skill} attack_skill = {attack} defense_skill = {defense} maneuvering_skill = {maneuvering} coordination_skill = {coordination}{trait_script} }}")
+            else: lines.append(f"\t\tcorps_commander = {{ skill = {skill} attack_skill = {attack} defense_skill = {defense} planning_skill = {planning} logistics_skill = {logistics}{trait_script} }}")
+            raw_script = str(character.get("rawScript", "")).strip()
+            if raw_script: lines.extend("\t\t" + line for line in raw_script.splitlines())
+            lines.append("\t}")
+        lines.append("}"); (char_dir / "NHO_editor_characters.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    national_spirits = project.get("nationalSpirits", [])
+    if national_spirits:
+        ideas_dir = target / "common" / "ideas"
+        ideas_dir.mkdir(parents=True, exist_ok=True)
+        idea_icon_dir = target / "gfx" / "interface" / "ideas"
+        idea_icon_dir.mkdir(parents=True, exist_ok=True)
+        interface_dir = target / "interface"
+        interface_dir.mkdir(parents=True, exist_ok=True)
+        idea_lines = ["ideas = {", "\tcountry = {"]
+        sprite_lines = ["spriteTypes = {"]
+        for spirit in national_spirits:
+            sid = re.sub(r"[^A-Za-z0-9_]", "_", spirit.get("id", "NHO_idea"))
+            icon_key = spirit.get("icon") or f"GFX_{sid}"
+            idea_lines.extend([f"\t\t{sid} = {{", "\t\t\tallowed = { always = yes }", "\t\t\tremoval_cost = -1", f"\t\t\tpicture = {icon_key}"])
+            modifiers = str(spirit.get("modifiers", "")).strip()
+            if modifiers:
+                idea_lines.append("\t\t\tmodifier = {")
+                idea_lines.extend("\t\t\t\t" + line.strip() for line in modifiers.splitlines() if line.strip())
+                idea_lines.append("\t\t\t}")
+            raw_extra = str(spirit.get("raw", "")).strip()
+            if raw_extra:
+                idea_lines.extend("\t\t\t" + line for line in raw_extra.splitlines())
+            idea_lines.append("\t\t}")
+            data_url = spirit.get("iconImage")
+            if data_url:
+                image = Image.open(BytesIO(base64.b64decode(data_url.split(",", 1)[1]))).convert("RGBA")
+                side = min(image.size)
+                left = (image.width - side) // 2; top = (image.height - side) // 2
+                image = image.crop((left, top, left + side, top + side)).resize((64, 64), Image.Resampling.LANCZOS)
+                filename = f"{sid}.dds"
+                image.save(idea_icon_dir / filename)
+                sprite_lines.extend(["\tspriteType = {", f'\t\tname = "{icon_key}"', f'\t\ttexturefile = "gfx/interface/ideas/{filename}"', "\t}"])
+        idea_lines.extend(["\t}", "}"])
+        (ideas_dir / "NHO_editor_national_spirits.txt").write_text("\n".join(idea_lines) + "\n", encoding="utf-8")
+        sprite_lines.append("}")
+        if len(sprite_lines) > 2:
+            (interface_dir / "NHO_editor_national_spirits.gfx").write_text("\n".join(sprite_lines) + "\n", encoding="utf-8")
+
+    timed_ideas = ["ideas = {", "\tcountry = {"]
+    timed_localisation = []
+    modifier_map = {"political_power": "political_power_gain", "stability": "stability_factor", "war_support": "war_support_factor"}
+    for focus in project.get("focuses", []):
+        for index, effect in enumerate(focus.get("effects", [])):
+            if effect.get("category") != "political" or int(effect.get("duration", 0) or 0) <= 0: continue
+            modifier = modifier_map.get(effect.get("type"))
+            if not modifier: continue
+            idea = timed_idea_id(focus["id"], index)
+            value = float(effect.get("amount", 0)) / 100
+            timed_ideas.extend([f"\t\t{idea} = {{", "\t\t\tallowed = { always = no }", "\t\t\tremoval_cost = -1", f"\t\t\tmodifier = {{ {modifier} = {value:g} }}", "\t\t}"])
+            timed_localisation.extend([f' {idea}:0 "{focus.get("name", "Focus")} – Temporary Effect"', f' {idea}_desc:0 "A temporary national modifier granted by {focus.get("name", focus["id"])}."'])
+    timed_ideas.extend(["\t}", "}"])
+    if timed_localisation:
+        ideas_dir = target / "common" / "ideas"; ideas_dir.mkdir(parents=True, exist_ok=True)
+        (ideas_dir / "NHO_editor_generated_ideas.txt").write_text("\n".join(timed_ideas) + "\n", encoding="utf-8")
+
+    event_sprites = ["spriteTypes = {"]
+    event_picture_dir = target / "gfx" / "event_pictures"
+    for event in project.get("events", []):
+        data_url = event.get("imageData")
+        if not data_url: continue
+        image = Image.open(BytesIO(base64.b64decode(data_url.split(",", 1)[1]))).convert("RGBA")
+        # HOI4's real event picture sizes from eventwindow.gui and the vanilla assets:
+        # country/report event = 210x176, newspaper/news event = 397x153.
+        target_size = (397, 153) if event.get("kind") == "news_event" else (210, 176)
+        tw, th = target_size
+        fit = event.get("imageFit", "cover")
+        user_scale = max(0.05, float(event.get("imageScale", 100) or 100) / 100.0)
+        offset_x = int(float(event.get("imageX", 0) or 0))
+        offset_y = int(float(event.get("imageY", 0) or 0))
+        if fit == "fill":
+            resized = image.resize((max(1, int(tw * user_scale)), max(1, int(th * user_scale))), Image.Resampling.LANCZOS)
+        else:
+            base = max(tw / image.width, th / image.height) if fit == "cover" else min(tw / image.width, th / image.height)
+            ratio = max(0.01, base * user_scale)
+            resized = image.resize((max(1, round(image.width * ratio)), max(1, round(image.height * ratio))), Image.Resampling.LANCZOS)
+        canvas = Image.new("RGBA", target_size, (0, 0, 0, 0))
+        px = (tw - resized.width) // 2 + offset_x
+        py = (th - resized.height) // 2 + offset_y
+        canvas.alpha_composite(resized, (px, py))
+        event_picture_dir.mkdir(parents=True, exist_ok=True)
+        stem = re.sub(r"[^A-Za-z0-9_]", "_", event["id"])
+        filename = f"NHO_event_{stem}.dds"
+        canvas.save(event_picture_dir / filename)
+        event["picture"] = f"GFX_NHO_event_{stem}"
+        event_sprites.extend(["\tspriteType = {", f'\t\tname = "{event["picture"]}"', f'\t\ttexturefile = "gfx/event_pictures/{filename}"', "\t}"])
+    event_sprites.append("}")
+    if len(event_sprites) > 2:
+        interface_dir = target / "interface"
+        interface_dir.mkdir(parents=True, exist_ok=True)
+        (interface_dir / "NHO_editor_event_pictures.gfx").write_text("\n".join(event_sprites) + "\n", encoding="utf-8")
+
+    loc_dir = target / "localisation" / "english"
+    loc_dir.mkdir(parents=True, exist_ok=True)
+    loc = ["l_english:"]
+    for focus in project.get("focuses", []):
+        loc.append(f" {focus['id']}:0 \"{focus.get('name', focus['id']).replace(chr(34), chr(39))}\"")
+        loc.append(f" {focus['id']}_desc:0 \"{focus.get('description', '').replace(chr(34), chr(39))}\"")
+    for event in project.get("events", []):
+        loc.append(f" {event.get('titleKey', event['id']+'.t')}:0 \"{event.get('title', event['id']).replace(chr(34), chr(39))}\"")
+        loc.append(f" {event.get('descKey', event['id']+'.d')}:0 \"{event.get('description', '').replace(chr(34), chr(39))}\"")
+        for option in event.get("options", []):
+            loc.append(f" {option.get('nameKey', event['id']+'.a')}:0 \"{option.get('text', 'Continue').replace(chr(34), chr(39))}\"")
+    diplomacy_names = {"non_aggression": "a non-aggression pact", "guarantee": "a guarantee of independence", "demand_land": "territorial concessions"}
+    for focus, action in diplomacy_actions:
+        event_id = action["_eventId"]
+        request = diplomacy_names.get(action.get("type"), "a diplomatic agreement")
+        loc.extend([f' {event_id}.t:0 "Norway Requests {request.title()}"', f' {event_id}.d:0 "Norway has approached us to request {request}. How shall we answer?"', f' {event_id}.a:0 "Accept the Norwegian request"', f' {event_id}.b:0 "Refuse"'])
+    if project.get("decisions"):
+        loc.append(' NHO_editor_decision_category:0 "National Initiatives"')
+        loc.append(' NHO_editor_decision_category_desc:0 "Decisions created in HOI4 Focus Studio."')
+    for decision in project.get("decisions", []):
+        did = re.sub(r"[^A-Za-z0-9_]", "_", decision["id"])
+        loc.append(f' {did}:0 "{decision.get("name", did).replace(chr(34), chr(39))}"')
+        loc.append(f' {did}_desc:0 "{decision.get("description", "").replace(chr(34), chr(39))}"')
+        if decision.get("effectType") == "manpower_factor" and decision.get("permanent"):
+            idea = f"NHO_editor_decision_idea_{did}"
+            loc.append(f' {idea}:0 "{decision.get("name", did)} – Permanent Effect"')
+            loc.append(f' {idea}_desc:0 "A permanent national modifier granted by this decision."')
+    for character in project.get("characters", []):
+        cid = re.sub(r"[^A-Za-z0-9_]", "_", character["id"])
+        loc.append(f' {cid}:0 \"{character.get("name", cid).replace(chr(34), chr(39))}\"')
+        if str(character.get("description", "")).strip(): loc.append(f' {cid}_desc:0 \"{str(character.get("description", "")).replace(chr(34), chr(39)).replace(chr(10), " ")}\"')
+    for spirit in project.get("nationalSpirits", []):
+        sid = re.sub(r"[^A-Za-z0-9_]", "_", spirit.get("id", "NHO_idea"))
+        loc.append(f' {sid}:0 "{spirit.get("name", sid).replace(chr(34), chr(39))}"')
+        loc.append(f' {sid}_desc:0 "{spirit.get("description", "").replace(chr(34), chr(39))}"')
+    loc.extend(timed_localisation)
+    (loc_dir / "NHO_editor_l_english.yml").write_text("\n".join(loc) + "\n", encoding="utf-8-sig")
+
+    # Copy converted focus icons and MERGE their sprite definitions.
+    # Never overwrite the base mod's icon registry: doing that made every older
+    # custom icon disappear in-game even though the Studio preview still worked.
+    custom_icons = ROOT / "projects" / "icons"
+    goal_dir = target / "gfx" / "interface" / "goals"
+    goal_dir.mkdir(parents=True, exist_ok=True)
+    interface_dir = target / "interface"
+    interface_dir.mkdir(parents=True, exist_ok=True)
+
+    if custom_icons.exists():
+        for icon in custom_icons.rglob("*.dds"):
+            shutil.copy2(icon, goal_dir / icon.name)
+
+    # Read every existing .gfx file first so already-valid definitions are kept.
+    defined_names = set()
+    for gfx_file in interface_dir.rglob("*.gfx"):
+        try:
+            gfx_text = gfx_file.read_text(encoding="utf-8-sig", errors="ignore")
+        except OSError:
+            continue
+        defined_names.update(re.findall(r'\bname\s*=\s*"([^"]+)"', gfx_text))
+
+    # Build a map of every DDS under goals, including files in subfolders.
+    available_icons = {}
+    for icon in goal_dir.rglob("*.dds"):
+        rel = icon.relative_to(target).as_posix()
+        available_icons.setdefault(f"GFX_{icon.stem}", rel)
+
+    # Register every project icon plus every icon referenced by the focus tree.
+    requested_names = {f"GFX_{p.stem}" for p in custom_icons.rglob("*.dds")} if custom_icons.exists() else set()
+    requested_names.update(
+        str(focus.get("icon", "")).strip()
+        for focus in project.get("focuses", [])
+        if str(focus.get("icon", "")).strip().startswith("GFX_")
+    )
+
+    generated = []
+    missing = []
+    project_icon_names = {f"GFX_{p.stem}" for p in custom_icons.rglob("*.dds")} if custom_icons.exists() else set()
+    for sprite_name in sorted(requested_names):
+        if sprite_name in defined_names:
+            continue
+        texture_path = available_icons.get(sprite_name)
+        if not texture_path:
+            # Vanilla/DLC icons are resolved by HOI4 itself and are not expected
+            # to exist inside the exported mod. Only fail for Studio-owned icons
+            # or the mod's NHO namespace.
+            if sprite_name in project_icon_names or sprite_name.startswith("GFX_NHO_"):
+                missing.append(sprite_name)
+            continue
+        generated.extend([
+            "\tspriteType = {",
+            f'\t\tname = "{sprite_name}"',
+            f'\t\ttexturefile = "{texture_path}"',
+            "\t}",
+        ])
+        defined_names.add(sprite_name)
+
+    generated_file = interface_dir / "NHO_editor_generated_focus_icons.gfx"
+    if generated:
+        generated_file.write_text("spriteTypes = {\n" + "\n".join(generated) + "\n}\n", encoding="utf-8", newline="\n")
+    elif generated_file.exists():
+        generated_file.unlink()
+
+    if missing:
+        raise ValueError("Missing DDS files for referenced focus icons: " + ", ".join(missing))
+    # This small sidecar makes a later folder import lossless. HOI4 ignores JSON.
+    for focus in project.get("focuses", []):
+        for action in focus.get("diplomacy", []):
+            action.pop("_eventId", None)
+    (target / "hoi4_focus_studio_project.json").write_text(json.dumps(project, ensure_ascii=False, indent=2), encoding="utf-8")
+    return target.parent
+
+
+def _default_hoi4_mod_dir() -> Path:
+    preferred = Path(r"C:\Users\Public\Documents\Paradox Interactive\Hearts of Iron IV\mod")
+    if preferred.parent.exists() or preferred.exists():
+        return preferred
+    candidates = [Path.home()/"OneDrive"/"Dokumenter"/"Paradox Interactive"/"Hearts of Iron IV"/"mod", Path.home()/"Documents"/"Paradox Interactive"/"Hearts of Iron IV"/"mod"]
+    return next((p for p in candidates if p.parent.exists()), candidates[-1])
+
+
+def install_test_build(project: dict) -> Path:
+    exported = export_project(project)
+    hoi4_mods = Path(project.get("hoi4ModFolder") or _default_hoi4_mod_dir())
+    hoi4_mods.mkdir(parents=True, exist_ok=True)
+    folder_name = re.sub(r"[^A-Za-z0-9_-]", "_", project.get("testFolder", "Norway_Remade_Test"))
+    export_folder = re.sub(r"[^A-Za-z0-9_-]", "_", project.get("exportFolder", "Norway_Remade"))
+    destination = hoi4_mods / folder_name
+    backup_root = ROOT / "backups"; backup_root.mkdir(exist_ok=True)
+    if destination.exists():
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        shutil.make_archive(str(backup_root/f"{folder_name}_{stamp}"), "zip", destination)
+        shutil.rmtree(destination)
+    shutil.copytree(exported / export_folder, destination)
+    descriptor_path = destination / "descriptor.mod"
+    descriptor = descriptor_path.read_text(encoding="utf-8-sig")
+    version = str(project.get("exportVersion", "0.78"))
+    display_name = project.get("modDisplayName", "Norway Remade")
+    version_label = version if str(version).lower().startswith('v') else f'v{version}'
+    descriptor = re.sub(r'(?m)^\s*name\s*=\s*"[^"]+"', f'name="{display_name} — {version_label}"', descriptor, count=1)
+    descriptor = re.sub(r'(?m)^\s*version\s*=\s*"[^"]+"', f'version="{version}"', descriptor, count=1)
+    descriptor_path.write_text(descriptor, encoding="utf-8")
+    external = descriptor + f'\npath="{destination.as_posix()}"\n'
+    (hoi4_mods / f"{folder_name}.mod").write_text(external, encoding="utf-8")
+    return destination
+
+
+def _sprite_icon_map(text_files: dict[str, str]) -> dict[str, str]:
+    """Return GFX sprite name -> normalized texture path from imported .gfx files."""
+    mapping = {}
+    block_re = re.compile(r"spriteType\s*=\s*\{(.*?)\}", re.I | re.S)
+    name_re = re.compile(r"\bname\s*=\s*[\"']?([^\"'\s}]+)", re.I)
+    tex_re = re.compile(r"\btexturefile\s*=\s*[\"']([^\"']+)[\"']", re.I)
+    for filename, content in text_files.items():
+        low = filename.replace('\\', '/').lower()
+        if not low.endswith('.gfx'):
+            continue
+        for block in block_re.findall(content):
+            nm = name_re.search(block)
+            tx = tex_re.search(block)
+            if nm and tx:
+                mapping[nm.group(1)] = tx.group(1).replace('\\', '/').lstrip('/')
+    return mapping
+
+
+def restore_focus_icons(project: dict, binary_files: dict[str, str], text_files: dict[str, str] | None = None) -> tuple[int, int, int]:
+    """Restore imported focus images and attach previews using sprite definitions when available."""
+    text_files = text_files or {}
+    icon_dir = ROOT / "projects" / "icons"
+    icon_dir.mkdir(parents=True, exist_ok=True)
+    sprite_map = _sprite_icon_map(text_files)
+    by_path = {}
+    by_stem = {}
+    decoded = 0
+    discovered = 0
+
+    for name, data_url in (binary_files or {}).items():
+        normalized = name.replace("\\", "/")
+        lower = normalized.lower()
+        if not (("/gfx/interface/" in lower) or lower.startswith("gfx/interface/")):
+            continue
+        if not lower.endswith((".dds", ".png", ".tga")):
+            continue
+        discovered += 1
+        filename = Path(normalized).name
+        stem = Path(filename).stem
+        try:
+            raw = base64.b64decode(data_url.split(",", 1)[1])
+            source = Image.open(BytesIO(raw)).convert("RGBA")
+            preview = source.copy()
+            preview.thumbnail((95, 85), Image.Resampling.LANCZOS)
+            canvas = Image.new("RGBA", (95, 85), (0, 0, 0, 0))
+            canvas.alpha_composite(preview, ((95-preview.width)//2, (85-preview.height)//2))
+            out_png = BytesIO(); canvas.save(out_png, format="PNG")
+            preview_url = "data:image/png;base64," + base64.b64encode(out_png.getvalue()).decode("ascii")
+            canvas.save(icon_dir / f"{stem}.png")
+            try:
+                canvas.save(icon_dir / f"{stem}.dds")
+            except Exception:
+                pass
+            # Store several keys because mod folders may include a selected-root prefix.
+            nlow = normalized.lower().lstrip('/')
+            marker = nlow.find('gfx/interface/')
+            rel = nlow[marker:] if marker >= 0 else nlow
+            by_path[rel] = preview_url
+            by_path[rel.replace('gfx/interface/goals/', 'gfx/interface/')] = preview_url
+            by_stem[stem.lower()] = preview_url
+            decoded += 1
+        except Exception:
+            continue
+
+    attached = 0
+    bundled = ROOT / "icon-previews"
+    for focus in project.get("focuses", []):
+        gfx = focus.get("icon", "")
+        preview = None
+        tex = sprite_map.get(gfx)
+        if tex:
+            tlow = tex.lower().lstrip('/')
+            preview = by_path.get(tlow) or by_stem.get(Path(tlow).stem.lower())
+        if not preview:
+            stem_guess = gfx[4:] if gfx.startswith('GFX_') else gfx
+            preview = by_stem.get(stem_guess.lower())
+        if not preview:
+            bundled_png = bundled / f"{gfx}.png"
+            if bundled_png.exists():
+                try:
+                    preview = "data:image/png;base64," + base64.b64encode(bundled_png.read_bytes()).decode("ascii")
+                except Exception:
+                    preview = None
+        if preview:
+            focus["iconImage"] = preview
+            attached += 1
+    return discovered, decoded, attached
+
+
+def import_mod_files(files: dict[str, str], binary_files: dict[str, str] | None = None) -> tuple[dict, str]:
+    """Import either a lossless Studio sidecar or an older scripted mod tree."""
+    binary_files = binary_files or {}
+    current = json.loads(PROJECT_FILE.read_text(encoding="utf-8"))
+    backup = PROJECT_FILE.parent / f"import_backup_{int(time.time())}.json"
+    shutil.copy2(PROJECT_FILE, backup)
+    for name, content in files.items():
+        if name.replace("\\", "/").lower().endswith("hoi4_focus_studio_project.json"):
+            imported = json.loads(content)
+            if not isinstance(imported.get("focuses"), list):
+                raise ValueError("The Studio project file does not contain a focus list.")
+            imported.setdefault("stateCatalog", current.get("stateCatalog", []))
+            imported.setdefault("events", [])
+            imported.setdefault("decisions", [])
+            imported.setdefault("characters", [])
+            discovered, decoded, attached = restore_focus_icons(imported, binary_files, files)
+            PROJECT_FILE.write_text(json.dumps(imported, ensure_ascii=False, indent=2), encoding="utf-8")
+            note = f" Found {discovered} image files, decoded {decoded}, and attached {attached} focus pictures."
+            return imported, "Lossless Studio project data was found and restored." + note
+
+    normalized = {name.replace("\\", "/"): content for name, content in files.items()}
+    focus_name = next((name for name in normalized if name.lower().endswith("/common/national_focus/norway.txt") or name.lower() == "common/national_focus/norway.txt"), None)
+    if not focus_name:
+        raise ValueError("No common/national_focus/norway.txt was found in that folder.")
+    marker = "common/national_focus/norway.txt"
+    prefix = focus_name[:-len(marker)]
+    import_root = ROOT / "imports" / f"folder_{int(time.time() * 1000)}"
+    for name, content in normalized.items():
+        relative = name[len(prefix):] if name.startswith(prefix) else name
+        relative = relative.lstrip("/")
+        if ".." in Path(relative).parts:
+            continue
+        destination = import_root / Path(relative)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(content, encoding="utf-8")
+    recovery_spec = importlib.util.spec_from_file_location("recover_exported_mod", ROOT / "recover_exported_mod.py")
+    recovery = importlib.util.module_from_spec(recovery_spec)
+    recovery_spec.loader.exec_module(recovery)
+    loc = recovery.localisation(import_root)
+    focuses = recovery.recover_focuses(import_root, loc)
+    events = recovery.recover_events(import_root, loc, focuses)
+    recovery.validate(focuses)
+    imported = {"title": current.get("title", "New HOI4 Project"), "exportVersion": current.get("exportVersion", "v077_editor_export"), "eventNamespace": "NHO_editor", "focuses": focuses, "events": events, "decisions": [], "characters": [], "nationalSpirits": [], "stateCatalog": current.get("stateCatalog", [])}
+    discovered, decoded, attached = restore_focus_icons(imported, binary_files, normalized)
+    PROJECT_FILE.write_text(json.dumps(imported, ensure_ascii=False, indent=2), encoding="utf-8")
+    note = f" Found {discovered} image files, decoded {decoded}, and attached {attached} focus pictures."
+    return imported, "Older mod detected: focus scripts and localisation were reconstructed." + note
+
+
+class Handler(SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+        super().end_headers()
+
+    def translate_path(self, path: str) -> str:
+        path = path.split("?", 1)[0]
+        if path == "/":
+            path = "/index.html"
+        return str(ROOT / path.lstrip("/"))
+
+    def send_json(self, data, status=200):
+        payload = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def do_GET(self):
+        request_path = self.path.split("?", 1)[0].rstrip("/") or "/"
+        if request_path == "/api/version":
+            self.send_json({"version": "6.9.0-development-1", "port": 8766})
+            return
+        if request_path == "/api/project":
+            self.send_json(json.loads(PROJECT_FILE.read_text(encoding="utf-8")))
+            return
+        super().do_GET()
+
+    def do_POST(self):
+        request_path = self.path.split("?", 1)[0].rstrip("/") or "/"
+        length = int(self.headers.get("Content-Length", 0))
+        try:
+            data = json.loads(self.rfile.read(length))
+            if request_path == "/api/project":
+                PROJECT_FILE.parent.mkdir(parents=True, exist_ok=True)
+                autosaves = PROJECT_FILE.parent / "autosaves"
+                autosaves.mkdir(parents=True, exist_ok=True)
+                if PROJECT_FILE.exists():
+                    stamp = int(time.time() // 300) * 300
+                    backup = autosaves / f"project_{stamp}.json"
+                    if not backup.exists():
+                        shutil.copy2(PROJECT_FILE, backup)
+                    old_backups = sorted(autosaves.glob("project_*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+                    for stale in old_backups[12:]:
+                        stale.unlink(missing_ok=True)
+                PROJECT_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                self.send_json({"ok": True})
+            elif request_path == "/api/icon":
+                name = re.sub(r"[^A-Za-z0-9_-]", "_", data.get("name", "custom_focus"))
+                raw = base64.b64decode(data["png"].split(",", 1)[1])
+                image = Image.open(BytesIO(raw)).convert("RGBA").resize((95, 85), Image.Resampling.LANCZOS)
+                out = ROOT / "projects" / "icons"
+                out.mkdir(parents=True, exist_ok=True)
+                image.save(out / f"{name}.png")
+                image.save(out / f"{name}.dds")
+                self.send_json({"ok": True, "path": str(out / f'{name}.dds')})
+            elif request_path == "/api/export":
+                current_version = str(data.get("exportVersion", "v0_80"))
+                bump = str(data.get("versionBump", "minor"))
+                export_version = _next_export_version(current_version, bump)
+                data["exportVersion"] = export_version
+                exported = export_project(data)
+                zip_path = _make_versioned_zip(exported, data, export_version)
+                PROJECT_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                opened = False
+                if data.get("openExportFolder", True):
+                    try:
+                        os.startfile(str(exported))
+                        opened = True
+                    except Exception:
+                        try:
+                            subprocess.Popen(["explorer", str(exported)])
+                            opened = True
+                        except Exception:
+                            opened = False
+                self.send_json({"ok": True, "path": str(exported), "zipPath": str(zip_path), "version": export_version, "opened": opened})
+            elif request_path == "/api/install":
+                self.send_json({"ok": True, "path": str(install_test_build(data)), "note": "Enable Norway Remade in the HOI4 launcher. The stable .mod file is updated automatically."})
+            elif request_path == "/api/import-mod":
+                imported, mode = import_mod_files(data.get("files", {}), data.get("binaryFiles", {}))
+                self.send_json({"ok": True, "project": imported, "mode": mode})
+            else:
+                self.send_json({"error": "Unknown endpoint"}, 404)
+        except Exception as exc:
+            self.send_json({"error": str(exc)}, 500)
+
+
+if __name__ == "__main__":
+    server = ThreadingHTTPServer(("127.0.0.1", 8766), Handler)
+    threading.Timer(0.7, lambda: webbrowser.open("http://127.0.0.1:8766")).start()
+    print("HOI4 Focus Studio is running at http://127.0.0.1:8766")
+    print("Close this window to stop it.")
+    server.serve_forever()

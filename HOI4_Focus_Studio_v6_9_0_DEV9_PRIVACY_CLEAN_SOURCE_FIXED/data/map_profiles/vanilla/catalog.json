@@ -1,0 +1,1836 @@
+{
+  "profile": "vanilla",
+  "label": "Vanilla HOI4",
+  "states": [
+    {
+      "id": 922,
+      "name": "Agder",
+      "owner": "NOR",
+      "population": 396425,
+      "provinces": [
+        3049,
+        3129,
+        6072,
+        9096,
+        9196,
+        9296,
+        11176,
+        11367,
+        11101
+      ],
+      "image": "/data/map_profiles/vanilla/state_922.png",
+      "rawImage": "/data/map_profiles/vanilla/state_922_raw.png",
+      "bounds": [
+        2885,
+        293,
+        2976,
+        382
+      ],
+      "provinceInfo": [
+        {
+          "id": 3049,
+          "rgb": [
+            42,
+            39,
+            68
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 3129,
+          "rgb": [
+            42,
+            132,
+            48
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6072,
+          "rgb": [
+            84,
+            42,
+            196
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 9096,
+          "rgb": [
+            126,
+            45,
+            69
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "forest"
+        },
+        {
+          "id": 9196,
+          "rgb": [
+            126,
+            165,
+            89
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 9296,
+          "rgb": [
+            127,
+            72,
+            9
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "forest"
+        },
+        {
+          "id": 11176,
+          "rgb": [
+            168,
+            168,
+            217
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "forest"
+        },
+        {
+          "id": 11367,
+          "rgb": [
+            169,
+            180,
+            27
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "forest"
+        },
+        {
+          "id": 11101,
+          "rgb": [
+            168,
+            84,
+            132
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        }
+      ]
+    },
+    {
+      "id": 925,
+      "name": "Finnmark",
+      "owner": "NOR",
+      "population": 142100,
+      "provinces": [
+        22,
+        64,
+        76,
+        128,
+        2995,
+        3016,
+        3040,
+        6015,
+        6092,
+        9042,
+        9064,
+        9089,
+        9116,
+        9128,
+        9191,
+        11034,
+        11063,
+        11077,
+        11104,
+        11169
+      ],
+      "image": "/data/map_profiles/vanilla/state_925.png",
+      "rawImage": "/data/map_profiles/vanilla/state_925_raw.png",
+      "bounds": [
+        3125,
+        1,
+        3314,
+        122
+      ],
+      "provinceInfo": [
+        {
+          "id": 22,
+          "rgb": [
+            0,
+            15,
+            130
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 64,
+          "rgb": [
+            0,
+            45,
+            135
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 76,
+          "rgb": [
+            0,
+            60,
+            10
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "hills"
+        },
+        {
+          "id": 128,
+          "rgb": [
+            0,
+            120,
+            20
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "hills"
+        },
+        {
+          "id": 2995,
+          "rgb": [
+            42,
+            3,
+            128
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "hills"
+        },
+        {
+          "id": 3016,
+          "rgb": [
+            42,
+            18,
+            3
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "hills"
+        },
+        {
+          "id": 3040,
+          "rgb": [
+            42,
+            33,
+            133
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "hills"
+        },
+        {
+          "id": 6015,
+          "rgb": [
+            84,
+            6,
+            1
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 6092,
+          "rgb": [
+            84,
+            66,
+            11
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 9042,
+          "rgb": [
+            126,
+            9,
+            129
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 9064,
+          "rgb": [
+            126,
+            24,
+            4
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 9089,
+          "rgb": [
+            126,
+            39,
+            134
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 9116,
+          "rgb": [
+            126,
+            69,
+            139
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 9128,
+          "rgb": [
+            126,
+            84,
+            14
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "plains"
+        },
+        {
+          "id": 9191,
+          "rgb": [
+            126,
+            159,
+            154
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "plains"
+        },
+        {
+          "id": 11034,
+          "rgb": [
+            168,
+            12,
+            2
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 11063,
+          "rgb": [
+            168,
+            42,
+            7
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 11077,
+          "rgb": [
+            168,
+            57,
+            137
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "hills"
+        },
+        {
+          "id": 11104,
+          "rgb": [
+            168,
+            87,
+            142
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "plains"
+        },
+        {
+          "id": 11169,
+          "rgb": [
+            168,
+            162,
+            27
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "plains"
+        }
+      ]
+    },
+    {
+      "id": 923,
+      "name": "Helgeland",
+      "owner": "NOR",
+      "population": 88812,
+      "provinces": [
+        173,
+        3048,
+        3088,
+        3126,
+        6071,
+        6111,
+        6187,
+        9208
+      ],
+      "image": "/data/map_profiles/vanilla/state_923.png",
+      "rawImage": "/data/map_profiles/vanilla/state_923_raw.png",
+      "bounds": [
+        2966,
+        111,
+        3070,
+        217
+      ],
+      "provinceInfo": [
+        {
+          "id": 173,
+          "rgb": [
+            0,
+            174,
+            0
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3048,
+          "rgb": [
+            42,
+            39,
+            13
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3088,
+          "rgb": [
+            42,
+            84,
+            148
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3126,
+          "rgb": [
+            42,
+            129,
+            28
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6071,
+          "rgb": [
+            84,
+            42,
+            141
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6111,
+          "rgb": [
+            84,
+            87,
+            21
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6187,
+          "rgb": [
+            84,
+            177,
+            36
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 9208,
+          "rgb": [
+            126,
+            180,
+            164
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        }
+      ]
+    },
+    {
+      "id": 914,
+      "name": "Jan Mayen",
+      "owner": "NOR",
+      "population": 10,
+      "provinces": [
+        13272
+      ],
+      "image": "/data/map_profiles/vanilla/state_914.png",
+      "rawImage": "/data/map_profiles/vanilla/state_914_raw.png",
+      "bounds": [
+        2631,
+        0,
+        2697,
+        49
+      ],
+      "provinceInfo": [
+        {
+          "id": 13272,
+          "rgb": [
+            26,
+            125,
+            215
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        }
+      ]
+    },
+    {
+      "id": 143,
+      "name": "Trøndelag",
+      "owner": "NOR",
+      "population": 280271,
+      "provinces": [
+        21,
+        107,
+        115,
+        3018,
+        3022,
+        3098,
+        3183,
+        6038,
+        6041,
+        6116,
+        6118,
+        6173,
+        9069,
+        9132,
+        9139,
+        11118,
+        11173
+      ],
+      "image": "/data/map_profiles/vanilla/state_143.png",
+      "rawImage": "/data/map_profiles/vanilla/state_143_raw.png",
+      "bounds": [
+        2911,
+        163,
+        3050,
+        280
+      ],
+      "provinceInfo": [
+        {
+          "id": 21,
+          "rgb": [
+            0,
+            15,
+            80
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 107,
+          "rgb": [
+            0,
+            93,
+            185
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "hills"
+        },
+        {
+          "id": 115,
+          "rgb": [
+            0,
+            105,
+            95
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3018,
+          "rgb": [
+            42,
+            18,
+            208
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "hills"
+        },
+        {
+          "id": 3022,
+          "rgb": [
+            42,
+            21,
+            173
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "hills"
+        },
+        {
+          "id": 3098,
+          "rgb": [
+            42,
+            96,
+            58
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3183,
+          "rgb": [
+            42,
+            198,
+            138
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6038,
+          "rgb": [
+            84,
+            21,
+            81
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "hills"
+        },
+        {
+          "id": 6041,
+          "rgb": [
+            84,
+            24,
+            46
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6116,
+          "rgb": [
+            84,
+            93,
+            156
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "hills"
+        },
+        {
+          "id": 6118,
+          "rgb": [
+            84,
+            96,
+            221
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6173,
+          "rgb": [
+            84,
+            159,
+            196
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 9069,
+          "rgb": [
+            126,
+            27,
+            174
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 9132,
+          "rgb": [
+            126,
+            87,
+            184
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "hills"
+        },
+        {
+          "id": 9139,
+          "rgb": [
+            126,
+            99,
+            94
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 11118,
+          "rgb": [
+            168,
+            102,
+            222
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 11173,
+          "rgb": [
+            168,
+            165,
+            197
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        }
+      ]
+    },
+    {
+      "id": 144,
+      "name": "Nordland",
+      "owner": "NOR",
+      "population": 142100,
+      "provinces": [
+        38,
+        192,
+        3034,
+        3132,
+        3145,
+        9126,
+        11157,
+        6214
+      ],
+      "image": "/data/map_profiles/vanilla/state_144.png",
+      "rawImage": "/data/map_profiles/vanilla/state_144_raw.png",
+      "bounds": [
+        2982,
+        52,
+        3116,
+        175
+      ],
+      "provinceInfo": [
+        {
+          "id": 38,
+          "rgb": [
+            0,
+            27,
+            40
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 192,
+          "rgb": [
+            0,
+            195,
+            160
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3034,
+          "rgb": [
+            42,
+            30,
+            168
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3132,
+          "rgb": [
+            42,
+            135,
+            58
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3145,
+          "rgb": [
+            42,
+            153,
+            153
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 9126,
+          "rgb": [
+            126,
+            81,
+            49
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 11157,
+          "rgb": [
+            168,
+            147,
+            152
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6214,
+          "rgb": [
+            84,
+            210,
+            6
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        }
+      ]
+    },
+    {
+      "id": 110,
+      "name": "Oslofjord",
+      "owner": "NOR",
+      "population": 1057185,
+      "provinces": [
+        14,
+        3007,
+        3171,
+        6115,
+        9103,
+        11078,
+        11151,
+        11184
+      ],
+      "image": "/data/map_profiles/vanilla/state_110.png",
+      "rawImage": "/data/map_profiles/vanilla/state_110_raw.png",
+      "bounds": [
+        2933,
+        273,
+        3016,
+        360
+      ],
+      "provinceInfo": [
+        {
+          "id": 14,
+          "rgb": [
+            0,
+            9,
+            155
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 3007,
+          "rgb": [
+            42,
+            12,
+            28
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 3171,
+          "rgb": [
+            42,
+            183,
+            213
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 6115,
+          "rgb": [
+            84,
+            93,
+            6
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "urban"
+        },
+        {
+          "id": 9103,
+          "rgb": [
+            126,
+            54,
+            64
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "plains"
+        },
+        {
+          "id": 11078,
+          "rgb": [
+            168,
+            57,
+            192
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "plains"
+        },
+        {
+          "id": 11151,
+          "rgb": [
+            168,
+            141,
+            177
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "forest"
+        },
+        {
+          "id": 11184,
+          "rgb": [
+            168,
+            177,
+            212
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "plains"
+        }
+      ]
+    },
+    {
+      "id": 920,
+      "name": "Opplandene",
+      "owner": "NOR",
+      "population": 211532,
+      "provinces": [
+        10,
+        27,
+        111,
+        133,
+        179,
+        3021,
+        3105,
+        3136,
+        6042,
+        6114,
+        6136,
+        6160,
+        9032,
+        9135,
+        9157,
+        9227,
+        11028,
+        11037,
+        11113,
+        11135,
+        11206,
+        144
+      ],
+      "image": "/data/map_profiles/vanilla/state_920.png",
+      "rawImage": "/data/map_profiles/vanilla/state_920_raw.png",
+      "bounds": [
+        2907,
+        223,
+        3030,
+        337
+      ],
+      "provinceInfo": [
+        {
+          "id": 10,
+          "rgb": [
+            0,
+            6,
+            85
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 27,
+          "rgb": [
+            0,
+            18,
+            150
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "hills"
+        },
+        {
+          "id": 111,
+          "rgb": [
+            0,
+            99,
+            65
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 133,
+          "rgb": [
+            0,
+            126,
+            5
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 179,
+          "rgb": [
+            0,
+            180,
+            85
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 3021,
+          "rgb": [
+            42,
+            21,
+            23
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "plains"
+        },
+        {
+          "id": 3105,
+          "rgb": [
+            42,
+            102,
+            193
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3136,
+          "rgb": [
+            42,
+            141,
+            43
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 6042,
+          "rgb": [
+            84,
+            24,
+            151
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 6114,
+          "rgb": [
+            84,
+            90,
+            191
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6136,
+          "rgb": [
+            84,
+            117,
+            131
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6160,
+          "rgb": [
+            84,
+            144,
+            171
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "plains"
+        },
+        {
+          "id": 9032,
+          "rgb": [
+            126,
+            0,
+            84
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 9135,
+          "rgb": [
+            126,
+            93,
+            64
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 9157,
+          "rgb": [
+            126,
+            120,
+            4
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 9227,
+          "rgb": [
+            126,
+            201,
+            174
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 11028,
+          "rgb": [
+            168,
+            3,
+            212
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 11037,
+          "rgb": [
+            168,
+            15,
+            22
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 11113,
+          "rgb": [
+            168,
+            96,
+            192
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 11135,
+          "rgb": [
+            168,
+            123,
+            132
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 11206,
+          "rgb": [
+            168,
+            204,
+            47
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 144,
+          "rgb": [
+            0,
+            138,
+            170
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        }
+      ]
+    },
+    {
+      "id": 921,
+      "name": "Telemark",
+      "owner": "NOR",
+      "population": 141502,
+      "provinces": [
+        100,
+        3059,
+        3094,
+        6080,
+        6184,
+        9036,
+        9204,
+        11029,
+        9174,
+        6151
+      ],
+      "image": "/data/map_profiles/vanilla/state_921.png",
+      "rawImage": "/data/map_profiles/vanilla/state_921_raw.png",
+      "bounds": [
+        2897,
+        266,
+        2988,
+        363
+      ],
+      "provinceInfo": [
+        {
+          "id": 100,
+          "rgb": [
+            0,
+            87,
+            5
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 3059,
+          "rgb": [
+            42,
+            48,
+            63
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3094,
+          "rgb": [
+            42,
+            90,
+            133
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "hills"
+        },
+        {
+          "id": 6080,
+          "rgb": [
+            84,
+            51,
+            191
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "hills"
+        },
+        {
+          "id": 6184,
+          "rgb": [
+            84,
+            171,
+            211
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 9036,
+          "rgb": [
+            126,
+            3,
+            154
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "forest"
+        },
+        {
+          "id": 9204,
+          "rgb": [
+            126,
+            174,
+            84
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "plains"
+        },
+        {
+          "id": 11029,
+          "rgb": [
+            168,
+            6,
+            27
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "plains"
+        },
+        {
+          "id": 9174,
+          "rgb": [
+            126,
+            138,
+            49
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 6151,
+          "rgb": [
+            84,
+            135,
+            176
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "forest"
+        }
+      ]
+    },
+    {
+      "id": 924,
+      "name": "Troms",
+      "owner": "NOR",
+      "population": 142100,
+      "provinces": [
+        44,
+        91,
+        3058,
+        3082,
+        6079,
+        6107,
+        6130,
+        11050,
+        11090
+      ],
+      "image": "/data/map_profiles/vanilla/state_924.png",
+      "rawImage": "/data/map_profiles/vanilla/state_924_raw.png",
+      "bounds": [
+        3044,
+        21,
+        3189,
+        126
+      ],
+      "provinceInfo": [
+        {
+          "id": 44,
+          "rgb": [
+            0,
+            30,
+            5
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 91,
+          "rgb": [
+            0,
+            75,
+            140
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3058,
+          "rgb": [
+            42,
+            48,
+            8
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3082,
+          "rgb": [
+            42,
+            78,
+            13
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6079,
+          "rgb": [
+            84,
+            51,
+            136
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6107,
+          "rgb": [
+            84,
+            81,
+            141
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "hills"
+        },
+        {
+          "id": 6130,
+          "rgb": [
+            84,
+            111,
+            146
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 11050,
+          "rgb": [
+            168,
+            27,
+            132
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 11090,
+          "rgb": [
+            168,
+            72,
+            12
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        }
+      ]
+    },
+    {
+      "id": 142,
+      "name": "Vestlandet",
+      "owner": "NOR",
+      "population": 484520,
+      "provinces": [
+        53,
+        65,
+        102,
+        122,
+        137,
+        188,
+        199,
+        3090,
+        3093,
+        3096,
+        3114,
+        3180,
+        3188,
+        3192,
+        6145,
+        6176,
+        6204,
+        6216,
+        9047,
+        9127,
+        9170,
+        9216,
+        11100,
+        11198
+      ],
+      "image": "/data/map_profiles/vanilla/state_142.png",
+      "rawImage": "/data/map_profiles/vanilla/state_142_raw.png",
+      "bounds": [
+        2857,
+        205,
+        2978,
+        376
+      ],
+      "provinceInfo": [
+        {
+          "id": 53,
+          "rgb": [
+            0,
+            36,
+            195
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 65,
+          "rgb": [
+            0,
+            45,
+            190
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 102,
+          "rgb": [
+            0,
+            87,
+            155
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 122,
+          "rgb": [
+            0,
+            111,
+            130
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "hills"
+        },
+        {
+          "id": 137,
+          "rgb": [
+            0,
+            129,
+            175
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 188,
+          "rgb": [
+            0,
+            192,
+            45
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 199,
+          "rgb": [
+            0,
+            204,
+            210
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3090,
+          "rgb": [
+            42,
+            87,
+            63
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3093,
+          "rgb": [
+            42,
+            90,
+            28
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3096,
+          "rgb": [
+            42,
+            93,
+            93
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3114,
+          "rgb": [
+            42,
+            114,
+            3
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3180,
+          "rgb": [
+            42,
+            195,
+            173
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3188,
+          "rgb": [
+            42,
+            207,
+            83
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 3192,
+          "rgb": [
+            42,
+            210,
+            153
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "hills"
+        },
+        {
+          "id": 6145,
+          "rgb": [
+            84,
+            129,
+            41
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6176,
+          "rgb": [
+            84,
+            162,
+            216
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "plains"
+        },
+        {
+          "id": 6204,
+          "rgb": [
+            84,
+            198,
+            46
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 6216,
+          "rgb": [
+            84,
+            210,
+            211
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 9047,
+          "rgb": [
+            126,
+            12,
+            149
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 9127,
+          "rgb": [
+            126,
+            81,
+            154
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 9170,
+          "rgb": [
+            126,
+            132,
+            169
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        },
+        {
+          "id": 9216,
+          "rgb": [
+            126,
+            189,
+            9
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 11100,
+          "rgb": [
+            168,
+            84,
+            27
+          ],
+          "type": "land",
+          "coastal": true,
+          "terrain": "mountain"
+        },
+        {
+          "id": 11198,
+          "rgb": [
+            168,
+            192,
+            137
+          ],
+          "type": "land",
+          "coastal": false,
+          "terrain": "mountain"
+        }
+      ]
+    }
+  ]
+}

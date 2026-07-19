@@ -1,0 +1,12 @@
+{
+  "title": "New HOI4 Project",
+  "modDisplayName": "New HOI4 Mod",
+  "exportVersion": "0.1",
+  "eventNamespace": "studio_event",
+  "focuses": [],
+  "events": [],
+  "decisions": [],
+  "characters": [],
+  "nationalSpirits": [],
+  "stateCatalog": []
+}

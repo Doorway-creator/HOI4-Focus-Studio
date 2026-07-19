@@ -1,0 +1,5 @@
+HOI4 Focus Studio v6.8.1
+
+- Replaced overlapping province ID labels on the construction map with compact level-only badges.
+- Nearby badges are automatically suppressed; the full province list remains in the planner panel.
+- Province highlighting and construction counts are unchanged.

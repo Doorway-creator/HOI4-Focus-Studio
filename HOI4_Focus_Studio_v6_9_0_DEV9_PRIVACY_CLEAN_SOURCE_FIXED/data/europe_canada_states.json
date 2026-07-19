@@ -1,0 +1,3776 @@
+[
+  {
+    "id": 44,
+    "name": "Central Albania",
+    "owner": "ALB",
+    "population": 493867
+  },
+  {
+    "id": 805,
+    "name": "Northern Epirus",
+    "owner": "ALB",
+    "population": 262200
+  },
+  {
+    "id": 934,
+    "name": "Shkodër",
+    "owner": "ALB",
+    "population": 246933
+  },
+  {
+    "id": 975,
+    "name": "Burgenland",
+    "owner": "AUS",
+    "population": 298000
+  },
+  {
+    "id": 4,
+    "name": "Lower Austria",
+    "owner": "AUS",
+    "population": 2297983
+  },
+  {
+    "id": 976,
+    "name": "Steiermark-Kärnten",
+    "owner": "AUS",
+    "population": 1500000
+  },
+  {
+    "id": 153,
+    "name": "Tyrol",
+    "owner": "AUS",
+    "population": 1500986
+  },
+  {
+    "id": 152,
+    "name": "Upper Austria",
+    "owner": "AUS",
+    "population": 675377
+  },
+  {
+    "id": 848,
+    "name": "Vorarlberg",
+    "owner": "AUS",
+    "population": 154354
+  },
+  {
+    "id": 977,
+    "name": "Antwerp",
+    "owner": "BEL",
+    "population": 1800000
+  },
+  {
+    "id": 980,
+    "name": "Ardennes",
+    "owner": "BEL",
+    "population": 338130
+  },
+  {
+    "id": 769,
+    "name": "Burundi",
+    "owner": "BEL",
+    "population": 2145731
+  },
+  {
+    "id": 538,
+    "name": "Coquilhatville",
+    "owner": "BEL",
+    "population": 1693974
+  },
+  {
+    "id": 890,
+    "name": "Costermansville",
+    "owner": "BEL",
+    "population": 710035
+  },
+  {
+    "id": 889,
+    "name": "Elisabethville",
+    "owner": "BEL",
+    "population": 708190
+  },
+  {
+    "id": 6,
+    "name": "Flanders",
+    "owner": "BEL",
+    "population": 2947700
+  },
+  {
+    "id": 888,
+    "name": "Lusambo",
+    "owner": "BEL",
+    "population": 885237
+  },
+  {
+    "id": 295,
+    "name": "Léopoldville",
+    "owner": "BEL",
+    "population": 1947522
+  },
+  {
+    "id": 768,
+    "name": "Rwanda",
+    "owner": "BEL",
+    "population": 1716564
+  },
+  {
+    "id": 718,
+    "name": "Stanleyville",
+    "owner": "BEL",
+    "population": 1656749
+  },
+  {
+    "id": 34,
+    "name": "Wallonia",
+    "owner": "BEL",
+    "population": 3043170
+  },
+  {
+    "id": 211,
+    "name": "Burgas",
+    "owner": "BUL",
+    "population": 1358394
+  },
+  {
+    "id": 801,
+    "name": "Moesia",
+    "owner": "BUL",
+    "population": 1218780
+  },
+  {
+    "id": 212,
+    "name": "Plovdiv",
+    "owner": "BUL",
+    "population": 1814936
+  },
+  {
+    "id": 48,
+    "name": "Sofia",
+    "owner": "BUL",
+    "population": 1685989
+  },
+  {
+    "id": 470,
+    "name": "Alberta",
+    "owner": "CAN",
+    "population": 690800
+  },
+  {
+    "id": 473,
+    "name": "British Columbia",
+    "owner": "CAN",
+    "population": 638165
+  },
+  {
+    "id": 860,
+    "name": "Côte-Nord",
+    "owner": "CAN",
+    "population": 110000
+  },
+  {
+    "id": 866,
+    "name": "Districts of Ontario",
+    "owner": "CAN",
+    "population": 10000
+  },
+  {
+    "id": 739,
+    "name": "Haida Gwaii",
+    "owner": "CAN",
+    "population": 12684
+  },
+  {
+    "id": 467,
+    "name": "Manitoba",
+    "owner": "CAN",
+    "population": 641071
+  },
+  {
+    "id": 863,
+    "name": "Maurice",
+    "owner": "CAN",
+    "population": 70000
+  },
+  {
+    "id": 865,
+    "name": "N. Saskatchewan",
+    "owner": "CAN",
+    "population": 65605
+  },
+  {
+    "id": 472,
+    "name": "N.W Territories",
+    "owner": "CAN",
+    "population": 27681
+  },
+  {
+    "id": 465,
+    "name": "New Brunswick",
+    "owner": "CAN",
+    "population": 475020
+  },
+  {
+    "id": 466,
+    "name": "Nord du Quebec",
+    "owner": "CAN",
+    "population": 8860
+  },
+  {
+    "id": 867,
+    "name": "Northern Manitoba",
+    "owner": "CAN",
+    "population": 10000
+  },
+  {
+    "id": 682,
+    "name": "Northern Ontario",
+    "owner": "CAN",
+    "population": 139059
+  },
+  {
+    "id": 464,
+    "name": "Nova Scotia",
+    "owner": "CAN",
+    "population": 490912
+  },
+  {
+    "id": 683,
+    "name": "Nunavut",
+    "owner": "CAN",
+    "population": 46135
+  },
+  {
+    "id": 862,
+    "name": "Ouest du Quebec",
+    "owner": "CAN",
+    "population": 80000
+  },
+  {
+    "id": 471,
+    "name": "Prince Rupert",
+    "owner": "CAN",
+    "population": 27681
+  },
+  {
+    "id": 861,
+    "name": "Saguenay",
+    "owner": "CAN",
+    "population": 50000
+  },
+  {
+    "id": 468,
+    "name": "Saint Lawrence",
+    "owner": "CAN",
+    "population": 2432754
+  },
+  {
+    "id": 469,
+    "name": "Saskatchewan",
+    "owner": "CAN",
+    "population": 800000
+  },
+  {
+    "id": 276,
+    "name": "Southern Ontario",
+    "owner": "CAN",
+    "population": 3117017
+  },
+  {
+    "id": 740,
+    "name": "Vancouver Island",
+    "owner": "CAN",
+    "population": 259612
+  },
+  {
+    "id": 864,
+    "name": "Yukon Territory",
+    "owner": "CAN",
+    "population": 4230
+  },
+  {
+    "id": 9,
+    "name": "Bohemia",
+    "owner": "CZE",
+    "population": 4492600
+  },
+  {
+    "id": 73,
+    "name": "Carpathian Ruthenia",
+    "owner": "CZE",
+    "population": 854300
+  },
+  {
+    "id": 71,
+    "name": "Eastern Slovakia",
+    "owner": "CZE",
+    "population": 1197800
+  },
+  {
+    "id": 75,
+    "name": "Moravia",
+    "owner": "CZE",
+    "population": 2598400
+  },
+  {
+    "id": 69,
+    "name": "North Sudetenland",
+    "owner": "CZE",
+    "population": 2476250
+  },
+  {
+    "id": 972,
+    "name": "South Sudetenland",
+    "owner": "CZE",
+    "population": 353750
+  },
+  {
+    "id": 664,
+    "name": "Southern Slovakia",
+    "owner": "CZE",
+    "population": 854300
+  },
+  {
+    "id": 74,
+    "name": "Sudeten Silesia",
+    "owner": "CZE",
+    "population": 820000
+  },
+  {
+    "id": 72,
+    "name": "Trans-Olza",
+    "owner": "CZE",
+    "population": 152000
+  },
+  {
+    "id": 70,
+    "name": "Western Slovakia",
+    "owner": "CZE",
+    "population": 1230500
+  },
+  {
+    "id": 910,
+    "name": "Bornholm",
+    "owner": "DEN",
+    "population": 45819
+  },
+  {
+    "id": 337,
+    "name": "Faroe Islands",
+    "owner": "DEN",
+    "population": 25900
+  },
+  {
+    "id": 911,
+    "name": "Fyn",
+    "owner": "DEN",
+    "population": 497073
+  },
+  {
+    "id": 101,
+    "name": "Greenland",
+    "owner": "DEN",
+    "population": 18000
+  },
+  {
+    "id": 99,
+    "name": "Jutland",
+    "owner": "DEN",
+    "population": 1254177
+  },
+  {
+    "id": 37,
+    "name": "Sjaelland",
+    "owner": "DEN",
+    "population": 1491222
+  },
+  {
+    "id": 912,
+    "name": "Southern Jutland",
+    "owner": "DEN",
+    "population": 418058
+  },
+  {
+    "id": 136,
+    "name": "Aberdeenshire",
+    "owner": "ENG",
+    "population": 745466
+  },
+  {
+    "id": 658,
+    "name": "Abu Dhabi",
+    "owner": "ENG",
+    "population": 170200
+  },
+  {
+    "id": 447,
+    "name": "Alexandria",
+    "owner": "ENG",
+    "population": 3859239
+  },
+  {
+    "id": 733,
+    "name": "Andaman",
+    "owner": "ENG",
+    "population": 29500
+  },
+  {
+    "id": 659,
+    "name": "Arabian UK 2",
+    "owner": "ENG",
+    "population": 871202
+  },
+  {
+    "id": 703,
+    "name": "Ascension",
+    "owner": "ENG",
+    "population": 458
+  },
+  {
+    "id": 456,
+    "name": "Aswan",
+    "owner": "ENG",
+    "population": 4224516
+  },
+  {
+    "id": 885,
+    "name": "Bahr al Ghazal",
+    "owner": "ENG",
+    "population": 550000
+  },
+  {
+    "id": 1014,
+    "name": "Bahrain",
+    "owner": "ENG",
+    "population": 89970
+  },
+  {
+    "id": 981,
+    "name": "Barotseland",
+    "owner": "ENG",
+    "population": 690043
+  },
+  {
+    "id": 542,
+    "name": "Bechuanaland",
+    "owner": "ENG",
+    "population": 234000
+  },
+  {
+    "id": 900,
+    "name": "Benue",
+    "owner": "ENG",
+    "population": 1163674
+  },
+  {
+    "id": 696,
+    "name": "Bermuda",
+    "owner": "ENG",
+    "population": 37516
+  },
+  {
+    "id": 886,
+    "name": "Blue Nile",
+    "owner": "ENG",
+    "population": 661102
+  },
+  {
+    "id": 901,
+    "name": "Borno",
+    "owner": "ENG",
+    "population": 166240
+  },
+  {
+    "id": 687,
+    "name": "British Guyana",
+    "owner": "ENG",
+    "population": 309000
+  },
+  {
+    "id": 311,
+    "name": "British Honduras",
+    "owner": "ENG",
+    "population": 51000
+  },
+  {
+    "id": 269,
+    "name": "British Somaliland",
+    "owner": "ENG",
+    "population": 344700
+  },
+  {
+    "id": 907,
+    "name": "Cairo",
+    "owner": "ENG",
+    "population": 6454865
+  },
+  {
+    "id": 422,
+    "name": "Ceylon",
+    "owner": "ENG",
+    "population": 5500000
+  },
+  {
+    "id": 711,
+    "name": "Christmas Island",
+    "owner": "ENG",
+    "population": 1625
+  },
+  {
+    "id": 712,
+    "name": "Cocos Islands",
+    "owner": "ENG",
+    "population": 42
+  },
+  {
+    "id": 931,
+    "name": "Cumbria",
+    "owner": "ENG",
+    "population": 745101
+  },
+  {
+    "id": 183,
+    "name": "Cyprus",
+    "owner": "ENG",
+    "population": 347959
+  },
+  {
+    "id": 710,
+    "name": "Diego Garcia",
+    "owner": "ENG",
+    "population": 2147
+  },
+  {
+    "id": 125,
+    "name": "East Anglia",
+    "owner": "ENG",
+    "population": 1363174
+  },
+  {
+    "id": 129,
+    "name": "East Midlands",
+    "owner": "ENG",
+    "population": 2212021
+  },
+  {
+    "id": 457,
+    "name": "Eastern Desert",
+    "owner": "ENG",
+    "population": 2194
+  },
+  {
+    "id": 643,
+    "name": "Ellice Islands",
+    "owner": "ENG",
+    "population": 493
+  },
+  {
+    "id": 299,
+    "name": "Falkland Islands",
+    "owner": "ENG",
+    "population": 2463
+  },
+  {
+    "id": 636,
+    "name": "Fiji",
+    "owner": "ENG",
+    "population": 180000
+  },
+  {
+    "id": 701,
+    "name": "Gambia",
+    "owner": "ENG",
+    "population": 199520
+  },
+  {
+    "id": 903,
+    "name": "Garissa",
+    "owner": "ENG",
+    "population": 610560
+  },
+  {
+    "id": 274,
+    "name": "Ghana",
+    "owner": "ENG",
+    "population": 3163600
+  },
+  {
+    "id": 118,
+    "name": "Gibraltar",
+    "owner": "ENG",
+    "population": 21372
+  },
+  {
+    "id": 639,
+    "name": "Gilbert Islands",
+    "owner": "ENG",
+    "population": 1035
+  },
+  {
+    "id": 338,
+    "name": "Gloucestershire",
+    "owner": "ENG",
+    "population": 1800615
+  },
+  {
+    "id": 126,
+    "name": "Greater London Area",
+    "owner": "ENG",
+    "population": 9824296
+  },
+  {
+    "id": 326,
+    "name": "Hong Kong",
+    "owner": "ENG",
+    "population": 1143516
+  },
+  {
+    "id": 932,
+    "name": "Isle of Man",
+    "owner": "ENG",
+    "population": 51000
+  },
+  {
+    "id": 689,
+    "name": "Jamaica",
+    "owner": "ENG",
+    "population": 1075000
+  },
+  {
+    "id": 883,
+    "name": "Kassala",
+    "owner": "ENG",
+    "population": 511402
+  },
+  {
+    "id": 551,
+    "name": "Khartoum",
+    "owner": "ENG",
+    "population": 821003
+  },
+  {
+    "id": 549,
+    "name": "Kurdufan",
+    "owner": "ENG",
+    "population": 1802132
+  },
+  {
+    "id": 332,
+    "name": "Labrador",
+    "owner": "ENG",
+    "population": 22179
+  },
+  {
+    "id": 558,
+    "name": "Lagos",
+    "owner": "ENG",
+    "population": 19757000
+  },
+  {
+    "id": 133,
+    "name": "Lanark",
+    "owner": "ENG",
+    "population": 2257723
+  },
+  {
+    "id": 132,
+    "name": "Lancashire",
+    "owner": "ENG",
+    "population": 5770454
+  },
+  {
+    "id": 308,
+    "name": "Leeward Islands",
+    "owner": "ENG",
+    "population": 25678
+  },
+  {
+    "id": 121,
+    "name": "Lothian",
+    "owner": "ENG",
+    "population": 1431624
+  },
+  {
+    "id": 770,
+    "name": "Malawi",
+    "owner": "ENG",
+    "population": 1603975
+  },
+  {
+    "id": 281,
+    "name": "Maldives",
+    "owner": "ENG",
+    "population": 79300
+  },
+  {
+    "id": 116,
+    "name": "Malta",
+    "owner": "ENG",
+    "population": 241621
+  },
+  {
+    "id": 452,
+    "name": "Matrouh",
+    "owner": "ENG",
+    "population": 52556
+  },
+  {
+    "id": 707,
+    "name": "Mauritius",
+    "owner": "ENG",
+    "population": 404458
+  },
+  {
+    "id": 905,
+    "name": "Mombasa",
+    "owner": "ENG",
+    "population": 1017600
+  },
+  {
+    "id": 547,
+    "name": "Nairobi",
+    "owner": "ENG",
+    "population": 1085440
+  },
+  {
+    "id": 734,
+    "name": "Nendo",
+    "owner": "ENG",
+    "population": 5167
+  },
+  {
+    "id": 331,
+    "name": "Newfoundland",
+    "owner": "ENG",
+    "population": 255060
+  },
+  {
+    "id": 767,
+    "name": "North Darfur",
+    "owner": "ENG",
+    "population": 8143
+  },
+  {
+    "id": 690,
+    "name": "Northern Bahamas",
+    "owner": "ENG",
+    "population": 40000
+  },
+  {
+    "id": 119,
+    "name": "Northern Ireland",
+    "owner": "ENG",
+    "population": 1198537
+  },
+  {
+    "id": 131,
+    "name": "Northumberland",
+    "owner": "ENG",
+    "population": 2128860
+  },
+  {
+    "id": 904,
+    "name": "Nyanza-Rift Valley",
+    "owner": "ENG",
+    "population": 678400
+  },
+  {
+    "id": 1065,
+    "name": "Penang",
+    "owner": "ENG",
+    "population": 201100
+  },
+  {
+    "id": 270,
+    "name": "Pitcairn Island",
+    "owner": "ENG",
+    "population": 40
+  },
+  {
+    "id": 765,
+    "name": "Qatar",
+    "owner": "ENG",
+    "population": 51600
+  },
+  {
+    "id": 545,
+    "name": "Rhodesia",
+    "owner": "ENG",
+    "population": 1171336
+  },
+  {
+    "id": 704,
+    "name": "Saint Helena",
+    "owner": "ENG",
+    "population": 2485
+  },
+  {
+    "id": 120,
+    "name": "Scottish Highlands",
+    "owner": "ENG",
+    "population": 247873
+  },
+  {
+    "id": 709,
+    "name": "Seychelles",
+    "owner": "ENG",
+    "population": 126703
+  },
+  {
+    "id": 933,
+    "name": "Shetland Islands",
+    "owner": "ENG",
+    "population": 18000
+  },
+  {
+    "id": 700,
+    "name": "Sierra Leone",
+    "owner": "ENG",
+    "population": 1768500
+  },
+  {
+    "id": 453,
+    "name": "Sinai",
+    "owner": "ENG",
+    "population": 15359
+  },
+  {
+    "id": 1021,
+    "name": "Singapore",
+    "owner": "ENG",
+    "population": 557745
+  },
+  {
+    "id": 906,
+    "name": "Socotra",
+    "owner": "ENG",
+    "population": 21303
+  },
+  {
+    "id": 902,
+    "name": "Sokoto",
+    "owner": "ENG",
+    "population": 332479
+  },
+  {
+    "id": 634,
+    "name": "Solomon Islands",
+    "owner": "ENG",
+    "population": 120000
+  },
+  {
+    "id": 887,
+    "name": "South Darfur",
+    "owner": "ENG",
+    "population": 302020
+  },
+  {
+    "id": 720,
+    "name": "South Georgia",
+    "owner": "ENG",
+    "population": 30
+  },
+  {
+    "id": 123,
+    "name": "South-West England",
+    "owner": "ENG",
+    "population": 1221013
+  },
+  {
+    "id": 693,
+    "name": "Southern Bahamas",
+    "owner": "ENG",
+    "population": 15000
+  },
+  {
+    "id": 446,
+    "name": "Suez",
+    "owner": "ENG",
+    "population": 131732
+  },
+  {
+    "id": 127,
+    "name": "Sussex",
+    "owner": "ENG",
+    "population": 3193383
+  },
+  {
+    "id": 546,
+    "name": "Tanganyika",
+    "owner": "ENG",
+    "population": 5299000
+  },
+  {
+    "id": 691,
+    "name": "Trinidad",
+    "owner": "ENG",
+    "population": 413119
+  },
+  {
+    "id": 548,
+    "name": "Uganda",
+    "owner": "ENG",
+    "population": 3515625
+  },
+  {
+    "id": 884,
+    "name": "Upper Nile",
+    "owner": "ENG",
+    "population": 1040121
+  },
+  {
+    "id": 122,
+    "name": "Wales",
+    "owner": "ENG",
+    "population": 2309230
+  },
+  {
+    "id": 128,
+    "name": "West Midlands",
+    "owner": "ENG",
+    "population": 3685235
+  },
+  {
+    "id": 552,
+    "name": "Western Desert",
+    "owner": "ENG",
+    "population": 18539
+  },
+  {
+    "id": 692,
+    "name": "Windward Islands",
+    "owner": "ENG",
+    "population": 76485
+  },
+  {
+    "id": 130,
+    "name": "Yorkshire",
+    "owner": "ENG",
+    "population": 4762495
+  },
+  {
+    "id": 771,
+    "name": "Zambia",
+    "owner": "ENG",
+    "population": 690045
+  },
+  {
+    "id": 812,
+    "name": "Harju",
+    "owner": "EST",
+    "population": 275220
+  },
+  {
+    "id": 13,
+    "name": "Pärnu",
+    "owner": "EST",
+    "population": 423070
+  },
+  {
+    "id": 811,
+    "name": "Saaremaa",
+    "owner": "EST",
+    "population": 32370
+  },
+  {
+    "id": 191,
+    "name": "Tartu",
+    "owner": "EST",
+    "population": 225840
+  },
+  {
+    "id": 813,
+    "name": "Virumaa",
+    "owner": "EST",
+    "population": 150560
+  },
+  {
+    "id": 927,
+    "name": "Häme",
+    "owner": "FIN",
+    "population": 404500
+  },
+  {
+    "id": 146,
+    "name": "Karjala",
+    "owner": "FIN",
+    "population": 604427
+  },
+  {
+    "id": 150,
+    "name": "Kuopio",
+    "owner": "FIN",
+    "population": 392400
+  },
+  {
+    "id": 928,
+    "name": "Kymi",
+    "owner": "FIN",
+    "population": 43457
+  },
+  {
+    "id": 148,
+    "name": "Lappi",
+    "owner": "FIN",
+    "population": 121737
+  },
+  {
+    "id": 930,
+    "name": "Mikkeli",
+    "owner": "FIN",
+    "population": 204200
+  },
+  {
+    "id": 929,
+    "name": "Oulu",
+    "owner": "FIN",
+    "population": 318000
+  },
+  {
+    "id": 722,
+    "name": "Petsamo",
+    "owner": "FIN",
+    "population": 2371
+  },
+  {
+    "id": 147,
+    "name": "Salla",
+    "owner": "FIN",
+    "population": 4630
+  },
+  {
+    "id": 926,
+    "name": "Turku",
+    "owner": "FIN",
+    "population": 529300
+  },
+  {
+    "id": 111,
+    "name": "Uusimaa",
+    "owner": "FIN",
+    "population": 559000
+  },
+  {
+    "id": 149,
+    "name": "Vaasa",
+    "owner": "FIN",
+    "population": 594860
+  },
+  {
+    "id": 145,
+    "name": "Åland",
+    "owner": "FIN",
+    "population": 28139
+  },
+  {
+    "id": 514,
+    "name": "Algerian Desert",
+    "owner": "FRA",
+    "population": 207733
+  },
+  {
+    "id": 459,
+    "name": "Algiers",
+    "owner": "FRA",
+    "population": 3089944
+  },
+  {
+    "id": 32,
+    "name": "Alpes",
+    "owner": "FRA",
+    "population": 1007500
+  },
+  {
+    "id": 28,
+    "name": "Alsace-Lorraine",
+    "owner": "FRA",
+    "population": 1915600
+  },
+  {
+    "id": 19,
+    "name": "Aquitaine",
+    "owner": "FRA",
+    "population": 1140400
+  },
+  {
+    "id": 26,
+    "name": "Auvergne",
+    "owner": "FRA",
+    "population": 877800
+  },
+  {
+    "id": 775,
+    "name": "B.E.T.",
+    "owner": "FRA",
+    "population": 18744
+  },
+  {
+    "id": 556,
+    "name": "Bamako",
+    "owner": "FRA",
+    "population": 1662391
+  },
+  {
+    "id": 1068,
+    "name": "Bassac",
+    "owner": "FRA",
+    "population": 284000
+  },
+  {
+    "id": 1067,
+    "name": "Battambang",
+    "owner": "FRA",
+    "population": 1122000
+  },
+  {
+    "id": 21,
+    "name": "Bouches-du-Rhône",
+    "owner": "FRA",
+    "population": 1670310
+  },
+  {
+    "id": 27,
+    "name": "Bourgogne",
+    "owner": "FRA",
+    "population": 1370800
+  },
+  {
+    "id": 14,
+    "name": "Brittany",
+    "owner": "FRA",
+    "population": 2396600
+  },
+  {
+    "id": 741,
+    "name": "Cambodia",
+    "owner": "FRA",
+    "population": 4245000
+  },
+  {
+    "id": 773,
+    "name": "Cameroon",
+    "owner": "FRA",
+    "population": 2945782
+  },
+  {
+    "id": 461,
+    "name": "Casablanca",
+    "owner": "FRA",
+    "population": 3197719
+  },
+  {
+    "id": 24,
+    "name": "Centre",
+    "owner": "FRA",
+    "population": 1546300
+  },
+  {
+    "id": 33,
+    "name": "Centre-Sud",
+    "owner": "FRA",
+    "population": 636400
+  },
+  {
+    "id": 774,
+    "name": "Chad",
+    "owner": "FRA",
+    "population": 1442456
+  },
+  {
+    "id": 18,
+    "name": "Champagne",
+    "owner": "FRA",
+    "population": 1370800
+  },
+  {
+    "id": 1066,
+    "name": "Cochinchina",
+    "owner": "FRA",
+    "population": 3245000
+  },
+  {
+    "id": 708,
+    "name": "Comoro Islands",
+    "owner": "FRA",
+    "population": 126703
+  },
+  {
+    "id": 460,
+    "name": "Constantine",
+    "owner": "FRA",
+    "population": 2343837
+  },
+  {
+    "id": 1,
+    "name": "Corsica",
+    "owner": "FRA",
+    "population": 322900
+  },
+  {
+    "id": 1017,
+    "name": "Da Nang",
+    "owner": "FRA",
+    "population": 3000000
+  },
+  {
+    "id": 776,
+    "name": "Dahomey",
+    "owner": "FRA",
+    "population": 1351563
+  },
+  {
+    "id": 660,
+    "name": "Equatorial Africa",
+    "owner": "FRA",
+    "population": 1136921
+  },
+  {
+    "id": 17,
+    "name": "Franche-Comte",
+    "owner": "FRA",
+    "population": 1517500
+  },
+  {
+    "id": 694,
+    "name": "French Caribbean",
+    "owner": "FRA",
+    "population": 444290
+  },
+  {
+    "id": 310,
+    "name": "French Guiana",
+    "owner": "FRA",
+    "population": 47341
+  },
+  {
+    "id": 320,
+    "name": "French India",
+    "owner": "FRA",
+    "population": 286410
+  },
+  {
+    "id": 268,
+    "name": "French Somaliland",
+    "owner": "FRA",
+    "population": 85232
+  },
+  {
+    "id": 539,
+    "name": "Gabon",
+    "owner": "FRA",
+    "population": 409752
+  },
+  {
+    "id": 665,
+    "name": "Gabès",
+    "owner": "FRA",
+    "population": 427824
+  },
+  {
+    "id": 898,
+    "name": "Gao",
+    "owner": "FRA",
+    "population": 498718
+  },
+  {
+    "id": 728,
+    "name": "Guangzhouwan",
+    "owner": "FRA",
+    "population": 200000
+  },
+  {
+    "id": 780,
+    "name": "Guinea",
+    "owner": "FRA",
+    "population": 195041
+  },
+  {
+    "id": 16,
+    "name": "Ile de France",
+    "owner": "FRA",
+    "population": 7038500
+  },
+  {
+    "id": 286,
+    "name": "Indochina",
+    "owner": "FRA",
+    "population": 2045000
+  },
+  {
+    "id": 779,
+    "name": "Ivory Coast",
+    "owner": "FRA",
+    "population": 3850734
+  },
+  {
+    "id": 899,
+    "name": "Kayes-Koulikoro",
+    "owner": "FRA",
+    "population": 1163674
+  },
+  {
+    "id": 713,
+    "name": "Kerguelen",
+    "owner": "FRA",
+    "population": 96
+  },
+  {
+    "id": 1069,
+    "name": "Lan Chang",
+    "owner": "FRA",
+    "population": 214000
+  },
+  {
+    "id": 22,
+    "name": "Languedoc",
+    "owner": "FRA",
+    "population": 1691200
+  },
+  {
+    "id": 670,
+    "name": "Laos",
+    "owner": "FRA",
+    "population": 1114000
+  },
+  {
+    "id": 25,
+    "name": "Limousin",
+    "owner": "FRA",
+    "population": 1343700
+  },
+  {
+    "id": 30,
+    "name": "Loire",
+    "owner": "FRA",
+    "population": 1388400
+  },
+  {
+    "id": 543,
+    "name": "Madagascar",
+    "owner": "FRA",
+    "population": 3694611
+  },
+  {
+    "id": 462,
+    "name": "Marrakech",
+    "owner": "FRA",
+    "population": 1865552
+  },
+  {
+    "id": 557,
+    "name": "Mauritania",
+    "owner": "FRA",
+    "population": 225000
+  },
+  {
+    "id": 786,
+    "name": "Mauritanian Desert",
+    "owner": "FRA",
+    "population": 124200
+  },
+  {
+    "id": 772,
+    "name": "Middle Congo",
+    "owner": "FRA",
+    "population": 746415
+  },
+  {
+    "id": 31,
+    "name": "Midi Pyrenees",
+    "owner": "FRA",
+    "population": 1825000
+  },
+  {
+    "id": 635,
+    "name": "New Caledonia",
+    "owner": "FRA",
+    "population": 31876
+  },
+  {
+    "id": 781,
+    "name": "Niger",
+    "owner": "FRA",
+    "population": 543817
+  },
+  {
+    "id": 29,
+    "name": "Nord-Pas-de-Calais",
+    "owner": "FRA",
+    "population": 2976400
+  },
+  {
+    "id": 15,
+    "name": "Normandy",
+    "owner": "FRA",
+    "population": 2332100
+  },
+  {
+    "id": 785,
+    "name": "Picardy",
+    "owner": "FRA",
+    "population": 1580000
+  },
+  {
+    "id": 23,
+    "name": "Poitou",
+    "owner": "FRA",
+    "population": 1603100
+  },
+  {
+    "id": 806,
+    "name": "Pyrénées-Atlantiques",
+    "owner": "FRA",
+    "population": 280723
+  },
+  {
+    "id": 706,
+    "name": "Reunion",
+    "owner": "FRA",
+    "population": 186637
+  },
+  {
+    "id": 20,
+    "name": "Rhone",
+    "owner": "FRA",
+    "population": 2973200
+  },
+  {
+    "id": 735,
+    "name": "Savoy",
+    "owner": "FRA",
+    "population": 907500
+  },
+  {
+    "id": 272,
+    "name": "Senegal",
+    "owner": "FRA",
+    "population": 1638000
+  },
+  {
+    "id": 515,
+    "name": "Southern Sahara",
+    "owner": "FRA",
+    "population": 1456356
+  },
+  {
+    "id": 730,
+    "name": "St Pierre and Miquelon",
+    "owner": "FRA",
+    "population": 3426
+  },
+  {
+    "id": 641,
+    "name": "Tahiti",
+    "owner": "FRA",
+    "population": 105786
+  },
+  {
+    "id": 513,
+    "name": "Tlemcen",
+    "owner": "FRA",
+    "population": 811486
+  },
+  {
+    "id": 777,
+    "name": "Togo",
+    "owner": "FRA",
+    "population": 1101346
+  },
+  {
+    "id": 782,
+    "name": "Tombouctou",
+    "owner": "FRA",
+    "population": 79243
+  },
+  {
+    "id": 671,
+    "name": "Tonkin",
+    "owner": "FRA",
+    "population": 8528000
+  },
+  {
+    "id": 458,
+    "name": "Tunisia",
+    "owner": "FRA",
+    "population": 1982940
+  },
+  {
+    "id": 778,
+    "name": "Upper Volta",
+    "owner": "FRA",
+    "population": 3186184
+  },
+  {
+    "id": 1071,
+    "name": "Vanuatu",
+    "owner": "FRA",
+    "population": 21876
+  },
+  {
+    "id": 851,
+    "name": "Var",
+    "owner": "FRA",
+    "population": 485000
+  },
+  {
+    "id": 978,
+    "name": "Baden",
+    "owner": "GER",
+    "population": 2056854
+  },
+  {
+    "id": 64,
+    "name": "Brandenburg",
+    "owner": "GER",
+    "population": 7265029
+  },
+  {
+    "id": 5,
+    "name": "Ermland-Masuren",
+    "owner": "GER",
+    "population": 1238108
+  },
+  {
+    "id": 54,
+    "name": "Franken",
+    "owner": "GER",
+    "population": 2508159
+  },
+  {
+    "id": 59,
+    "name": "Hannover",
+    "owner": "GER",
+    "population": 2438286
+  },
+  {
+    "id": 55,
+    "name": "Hessen",
+    "owner": "GER",
+    "population": 3798235
+  },
+  {
+    "id": 63,
+    "name": "Hinterpommern",
+    "owner": "GER",
+    "population": 1124417
+  },
+  {
+    "id": 58,
+    "name": "Holstein",
+    "owner": "GER",
+    "population": 3095630
+  },
+  {
+    "id": 763,
+    "name": "Königsberg",
+    "owner": "GER",
+    "population": 2140234
+  },
+  {
+    "id": 66,
+    "name": "Lower Silesia",
+    "owner": "GER",
+    "population": 3052726
+  },
+  {
+    "id": 61,
+    "name": "Mecklenburg",
+    "owner": "GER",
+    "population": 836353
+  },
+  {
+    "id": 42,
+    "name": "Moselland",
+    "owner": "GER",
+    "population": 3027739
+  },
+  {
+    "id": 53,
+    "name": "Niederbayern",
+    "owner": "GER",
+    "population": 1453365
+  },
+  {
+    "id": 52,
+    "name": "Oberbayern",
+    "owner": "GER",
+    "population": 2679413
+  },
+  {
+    "id": 68,
+    "name": "Ostmark",
+    "owner": "GER",
+    "population": 1250840
+  },
+  {
+    "id": 51,
+    "name": "Rhineland",
+    "owner": "GER",
+    "population": 6144743
+  },
+  {
+    "id": 65,
+    "name": "Sachsen",
+    "owner": "GER",
+    "population": 5592576
+  },
+  {
+    "id": 909,
+    "name": "Schleswig",
+    "owner": "GER",
+    "population": 152520
+  },
+  {
+    "id": 60,
+    "name": "Thüringen",
+    "owner": "GER",
+    "population": 3005214
+  },
+  {
+    "id": 67,
+    "name": "Upper Silesia",
+    "owner": "GER",
+    "population": 1402591
+  },
+  {
+    "id": 62,
+    "name": "Vorpommern",
+    "owner": "GER",
+    "population": 1006221
+  },
+  {
+    "id": 56,
+    "name": "Weser-Ems",
+    "owner": "GER",
+    "population": 2058467
+  },
+  {
+    "id": 57,
+    "name": "Westfalen",
+    "owner": "GER",
+    "population": 5109333
+  },
+  {
+    "id": 50,
+    "name": "Württemberg",
+    "owner": "GER",
+    "population": 3076854
+  },
+  {
+    "id": 187,
+    "name": "Aegean Islands",
+    "owner": "GRE",
+    "population": 322600
+  },
+  {
+    "id": 47,
+    "name": "Attica",
+    "owner": "GRE",
+    "population": 2312500
+  },
+  {
+    "id": 731,
+    "name": "Central Macedonia",
+    "owner": "GRE",
+    "population": 1155700
+  },
+  {
+    "id": 182,
+    "name": "Crete",
+    "owner": "GRE",
+    "population": 387900
+  },
+  {
+    "id": 185,
+    "name": "Epirus",
+    "owner": "GRE",
+    "population": 760900
+  },
+  {
+    "id": 186,
+    "name": "Peloponnese",
+    "owner": "GRE",
+    "population": 945000
+  },
+  {
+    "id": 184,
+    "name": "Thrace",
+    "owner": "GRE",
+    "population": 382500
+  },
+  {
+    "id": 35,
+    "name": "Brabant",
+    "owner": "HOL",
+    "population": 1449000
+  },
+  {
+    "id": 695,
+    "name": "Curaçao",
+    "owner": "HOL",
+    "population": 76299
+  },
+  {
+    "id": 36,
+    "name": "Friesland",
+    "owner": "HOL",
+    "population": 2364000
+  },
+  {
+    "id": 7,
+    "name": "Holland",
+    "owner": "HOL",
+    "population": 4123000
+  },
+  {
+    "id": 309,
+    "name": "Suriname",
+    "owner": "HOL",
+    "population": 152000
+  },
+  {
+    "id": 973,
+    "name": "Bacs",
+    "owner": "HUN",
+    "population": 580000
+  },
+  {
+    "id": 43,
+    "name": "Northern Hungary",
+    "owner": "HUN",
+    "population": 3750752
+  },
+  {
+    "id": 974,
+    "name": "South Transdanubia",
+    "owner": "HUN",
+    "population": 732535
+  },
+  {
+    "id": 154,
+    "name": "Southern plain",
+    "owner": "HUN",
+    "population": 2155383
+  },
+  {
+    "id": 155,
+    "name": "Western Hungary",
+    "owner": "HUN",
+    "population": 1465070
+  },
+  {
+    "id": 134,
+    "name": "Connaught",
+    "owner": "IRE",
+    "population": 667100
+  },
+  {
+    "id": 113,
+    "name": "Leinster",
+    "owner": "IRE",
+    "population": 1357600
+  },
+  {
+    "id": 135,
+    "name": "Munster",
+    "owner": "IRE",
+    "population": 941400
+  },
+  {
+    "id": 157,
+    "name": "Abruzzo",
+    "owner": "ITA",
+    "population": 2979335
+  },
+  {
+    "id": 450,
+    "name": "Benghasi",
+    "owner": "ITA",
+    "population": 82535
+  },
+  {
+    "id": 156,
+    "name": "Calabria",
+    "owner": "ITA",
+    "population": 1772000
+  },
+  {
+    "id": 117,
+    "name": "Campania",
+    "owner": "ITA",
+    "population": 4240000
+  },
+  {
+    "id": 663,
+    "name": "Cyrenaica",
+    "owner": "ITA",
+    "population": 8808
+  },
+  {
+    "id": 451,
+    "name": "Derna",
+    "owner": "ITA",
+    "population": 45628
+  },
+  {
+    "id": 164,
+    "name": "Dodecanese",
+    "owner": "ITA",
+    "population": 120000
+  },
+  {
+    "id": 449,
+    "name": "El Agheila",
+    "owner": "ITA",
+    "population": 40431
+  },
+  {
+    "id": 161,
+    "name": "Emilia Romagna",
+    "owner": "ITA",
+    "population": 3202401
+  },
+  {
+    "id": 550,
+    "name": "Eritrea",
+    "owner": "ITA",
+    "population": 600600
+  },
+  {
+    "id": 852,
+    "name": "Istria",
+    "owner": "ITA",
+    "population": 125850
+  },
+  {
+    "id": 844,
+    "name": "Jubaland",
+    "owner": "ITA",
+    "population": 1028895
+  },
+  {
+    "id": 2,
+    "name": "Lazio",
+    "owner": "ITA",
+    "population": 2781971
+  },
+  {
+    "id": 273,
+    "name": "Libyan Desert",
+    "owner": "ITA",
+    "population": 42633
+  },
+  {
+    "id": 736,
+    "name": "Litorale",
+    "owner": "ITA",
+    "population": 1038159
+  },
+  {
+    "id": 159,
+    "name": "Lombardy",
+    "owner": "ITA",
+    "population": 5597704
+  },
+  {
+    "id": 158,
+    "name": "Piedmont",
+    "owner": "ITA",
+    "population": 4765476
+  },
+  {
+    "id": 849,
+    "name": "Puglia",
+    "owner": "ITA",
+    "population": 2642000
+  },
+  {
+    "id": 114,
+    "name": "Sardinia",
+    "owner": "ITA",
+    "population": 991921
+  },
+  {
+    "id": 115,
+    "name": "Sicily",
+    "owner": "ITA",
+    "population": 3836571
+  },
+  {
+    "id": 662,
+    "name": "Sirte",
+    "owner": "ITA",
+    "population": 13213
+  },
+  {
+    "id": 559,
+    "name": "Somaliland",
+    "owner": "ITA",
+    "population": 771671
+  },
+  {
+    "id": 39,
+    "name": "South Tyrol",
+    "owner": "ITA",
+    "population": 298290
+  },
+  {
+    "id": 850,
+    "name": "Trentino",
+    "owner": "ITA",
+    "population": 370739
+  },
+  {
+    "id": 448,
+    "name": "Tripoli",
+    "owner": "ITA",
+    "population": 469136
+  },
+  {
+    "id": 661,
+    "name": "Tripolitania",
+    "owner": "ITA",
+    "population": 17617
+  },
+  {
+    "id": 162,
+    "name": "Tuscany",
+    "owner": "ITA",
+    "population": 3084933
+  },
+  {
+    "id": 160,
+    "name": "Veneto",
+    "owner": "ITA",
+    "population": 3963151
+  },
+  {
+    "id": 163,
+    "name": "Zadar",
+    "owner": "ITA",
+    "population": 18000
+  },
+  {
+    "id": 190,
+    "name": "Kurzeme",
+    "owner": "LAT",
+    "population": 315500
+  },
+  {
+    "id": 810,
+    "name": "Latgale",
+    "owner": "LAT",
+    "population": 600250
+  },
+  {
+    "id": 808,
+    "name": "Rīga",
+    "owner": "LAT",
+    "population": 420250
+  },
+  {
+    "id": 12,
+    "name": "Vidzeme",
+    "owner": "LAT",
+    "population": 408500
+  },
+  {
+    "id": 809,
+    "name": "Zemgale",
+    "owner": "LAT",
+    "population": 215500
+  },
+  {
+    "id": 815,
+    "name": "Aukštaitija",
+    "owner": "LIT",
+    "population": 161450
+  },
+  {
+    "id": 11,
+    "name": "Kaunas",
+    "owner": "LIT",
+    "population": 971940
+  },
+  {
+    "id": 188,
+    "name": "Memel",
+    "owner": "LIT",
+    "population": 150000
+  },
+  {
+    "id": 814,
+    "name": "Sūduva",
+    "owner": "LIT",
+    "population": 219740
+  },
+  {
+    "id": 189,
+    "name": "Žemaitija",
+    "owner": "LIT",
+    "population": 697100
+  },
+  {
+    "id": 8,
+    "name": "Luxembourg",
+    "owner": "LUX",
+    "population": 294748
+  },
+  {
+    "id": 922,
+    "name": "Agder",
+    "owner": "NOR",
+    "population": 396425
+  },
+  {
+    "id": 925,
+    "name": "Finnmark",
+    "owner": "NOR",
+    "population": 142100
+  },
+  {
+    "id": 923,
+    "name": "Helgeland",
+    "owner": "NOR",
+    "population": 88812
+  },
+  {
+    "id": 914,
+    "name": "Jan Mayen",
+    "owner": "NOR",
+    "population": 10
+  },
+  {
+    "id": 144,
+    "name": "Nordland",
+    "owner": "NOR",
+    "population": 142100
+  },
+  {
+    "id": 920,
+    "name": "Opplandene",
+    "owner": "NOR",
+    "population": 211532
+  },
+  {
+    "id": 110,
+    "name": "Oslofjord",
+    "owner": "NOR",
+    "population": 1057185
+  },
+  {
+    "id": 921,
+    "name": "Telemark",
+    "owner": "NOR",
+    "population": 141502
+  },
+  {
+    "id": 924,
+    "name": "Troms",
+    "owner": "NOR",
+    "population": 142100
+  },
+  {
+    "id": 143,
+    "name": "Trøndelag",
+    "owner": "NOR",
+    "population": 280271
+  },
+  {
+    "id": 142,
+    "name": "Vestlandet",
+    "owner": "NOR",
+    "population": 484520
+  },
+  {
+    "id": 97,
+    "name": "Białystok",
+    "owner": "POL",
+    "population": 1157200
+  },
+  {
+    "id": 85,
+    "name": "Danzig",
+    "owner": "POL",
+    "population": 366730
+  },
+  {
+    "id": 807,
+    "name": "Gdynia",
+    "owner": "POL",
+    "population": 713370
+  },
+  {
+    "id": 762,
+    "name": "Katowice",
+    "owner": "POL",
+    "population": 1000000
+  },
+  {
+    "id": 90,
+    "name": "Kielce",
+    "owner": "POL",
+    "population": 1835700
+  },
+  {
+    "id": 88,
+    "name": "Kraków",
+    "owner": "POL",
+    "population": 3692800
+  },
+  {
+    "id": 92,
+    "name": "Lublin",
+    "owner": "POL",
+    "population": 2464600
+  },
+  {
+    "id": 91,
+    "name": "Lwów",
+    "owner": "POL",
+    "population": 3227800
+  },
+  {
+    "id": 95,
+    "name": "Nowogródek",
+    "owner": "POL",
+    "population": 1598900
+  },
+  {
+    "id": 94,
+    "name": "Polesie",
+    "owner": "POL",
+    "population": 1232200
+  },
+  {
+    "id": 86,
+    "name": "Poznań",
+    "owner": "POL",
+    "population": 2106500
+  },
+  {
+    "id": 98,
+    "name": "Płock",
+    "owner": "POL",
+    "population": 1412100
+  },
+  {
+    "id": 89,
+    "name": "Stanisławów",
+    "owner": "POL",
+    "population": 2180300
+  },
+  {
+    "id": 784,
+    "name": "Vilna",
+    "owner": "POL",
+    "population": 517081
+  },
+  {
+    "id": 10,
+    "name": "Warsaw",
+    "owner": "POL",
+    "population": 3089000
+  },
+  {
+    "id": 96,
+    "name": "Wilejka",
+    "owner": "POL",
+    "population": 726000
+  },
+  {
+    "id": 93,
+    "name": "Wołyn",
+    "owner": "POL",
+    "population": 1985600
+  },
+  {
+    "id": 87,
+    "name": "Łódz",
+    "owner": "POL",
+    "population": 2632000
+  },
+  {
+    "id": 698,
+    "name": "Azores",
+    "owner": "POR",
+    "population": 212012
+  },
+  {
+    "id": 179,
+    "name": "Beja",
+    "owner": "POR",
+    "population": 777895
+  },
+  {
+    "id": 796,
+    "name": "Cabinda",
+    "owner": "POR",
+    "population": 25000
+  },
+  {
+    "id": 702,
+    "name": "Cape Verde",
+    "owner": "POR",
+    "population": 150600
+  },
+  {
+    "id": 721,
+    "name": "East Timor",
+    "owner": "POR",
+    "population": 455604
+  },
+  {
+    "id": 321,
+    "name": "Goa",
+    "owner": "POR",
+    "population": 533952
+  },
+  {
+    "id": 181,
+    "name": "Guarda",
+    "owner": "POR",
+    "population": 964700
+  },
+  {
+    "id": 112,
+    "name": "Lisbon",
+    "owner": "POR",
+    "population": 1995800
+  },
+  {
+    "id": 544,
+    "name": "Lourenço Marques",
+    "owner": "POR",
+    "population": 1226000
+  },
+  {
+    "id": 540,
+    "name": "Luanda",
+    "owner": "POR",
+    "population": 1600000
+  },
+  {
+    "id": 729,
+    "name": "Macau",
+    "owner": "POR",
+    "population": 157805
+  },
+  {
+    "id": 697,
+    "name": "Madeira",
+    "owner": "POR",
+    "population": 211600
+  },
+  {
+    "id": 896,
+    "name": "Manica e Sofala",
+    "owner": "POR",
+    "population": 188600
+  },
+  {
+    "id": 180,
+    "name": "Porto",
+    "owner": "POR",
+    "population": 1904600
+  },
+  {
+    "id": 296,
+    "name": "Portuguese Guinea",
+    "owner": "POR",
+    "population": 364900
+  },
+  {
+    "id": 795,
+    "name": "Santarém",
+    "owner": "POR",
+    "population": 729712
+  },
+  {
+    "id": 705,
+    "name": "Sao Tome",
+    "owner": "POR",
+    "population": 24725
+  },
+  {
+    "id": 892,
+    "name": "South West Angola",
+    "owner": "POR",
+    "population": 960000
+  },
+  {
+    "id": 891,
+    "name": "Zambesi",
+    "owner": "POR",
+    "population": 640000
+  },
+  {
+    "id": 897,
+    "name": "Zambezia-Moçambique",
+    "owner": "POR",
+    "population": 1386000
+  },
+  {
+    "id": 82,
+    "name": "Banat",
+    "owner": "ROM",
+    "population": 941500
+  },
+  {
+    "id": 78,
+    "name": "Bessarabia",
+    "owner": "ROM",
+    "population": 2296800
+  },
+  {
+    "id": 80,
+    "name": "Bucovina",
+    "owner": "ROM",
+    "population": 474600
+  },
+  {
+    "id": 83,
+    "name": "Crisana",
+    "owner": "ROM",
+    "population": 632900
+  },
+  {
+    "id": 77,
+    "name": "Dobrudja",
+    "owner": "ROM",
+    "population": 378000
+  },
+  {
+    "id": 79,
+    "name": "Moldova",
+    "owner": "ROM",
+    "population": 2806400
+  },
+  {
+    "id": 46,
+    "name": "Muntenia",
+    "owner": "ROM",
+    "population": 3971400
+  },
+  {
+    "id": 76,
+    "name": "North Transylvania",
+    "owner": "ROM",
+    "population": 2352700
+  },
+  {
+    "id": 971,
+    "name": "Northern Dobruja",
+    "owner": "ROM",
+    "population": 490000
+  },
+  {
+    "id": 81,
+    "name": "Oltenia",
+    "owner": "ROM",
+    "population": 1519300
+  },
+  {
+    "id": 766,
+    "name": "Southern Bessarabia",
+    "owner": "ROM",
+    "population": 566600
+  },
+  {
+    "id": 84,
+    "name": "Transylvania",
+    "owner": "ROM",
+    "population": 1622300
+  },
+  {
+    "id": 826,
+    "name": "Abkhazia",
+    "owner": "SOV",
+    "population": 491569
+  },
+  {
+    "id": 402,
+    "name": "Akhtubinsk",
+    "owner": "SOV",
+    "population": 282245
+  },
+  {
+    "id": 590,
+    "name": "Akmolinsk",
+    "owner": "SOV",
+    "population": 980533
+  },
+  {
+    "id": 586,
+    "name": "Alma-Ata",
+    "owner": "SOV",
+    "population": 2563404
+  },
+  {
+    "id": 40,
+    "name": "Altai Krai",
+    "owner": "SOV",
+    "population": 2107451
+  },
+  {
+    "id": 561,
+    "name": "Amur",
+    "owner": "SOV",
+    "population": 454281
+  },
+  {
+    "id": 214,
+    "name": "Arkhangelsk",
+    "owner": "SOV",
+    "population": 577985
+  },
+  {
+    "id": 230,
+    "name": "Armenia",
+    "owner": "SOV",
+    "population": 1250082
+  },
+  {
+    "id": 584,
+    "name": "Ashkhabad",
+    "owner": "SOV",
+    "population": 931458
+  },
+  {
+    "id": 236,
+    "name": "Astrakhan",
+    "owner": "SOV",
+    "population": 647208
+  },
+  {
+    "id": 589,
+    "name": "Ayaguz",
+    "owner": "SOV",
+    "population": 535191
+  },
+  {
+    "id": 229,
+    "name": "Azerbaijan",
+    "owner": "SOV",
+    "population": 2881049
+  },
+  {
+    "id": 401,
+    "name": "Balakovo",
+    "owner": "SOV",
+    "population": 309530
+  },
+  {
+    "id": 834,
+    "name": "Balta-Tiraspol",
+    "owner": "SOV",
+    "population": 183748
+  },
+  {
+    "id": 240,
+    "name": "Belgorod",
+    "owner": "SOV",
+    "population": 1364537
+  },
+  {
+    "id": 657,
+    "name": "Birobidzhan",
+    "owner": "SOV",
+    "population": 308380
+  },
+  {
+    "id": 204,
+    "name": "Bobruysk",
+    "owner": "SOV",
+    "population": 1041084
+  },
+  {
+    "id": 565,
+    "name": "Bodaybo",
+    "owner": "SOV",
+    "population": 195325
+  },
+  {
+    "id": 567,
+    "name": "Bratsk",
+    "owner": "SOV",
+    "population": 410183
+  },
+  {
+    "id": 224,
+    "name": "Bryansk",
+    "owner": "SOV",
+    "population": 1707567
+  },
+  {
+    "id": 830,
+    "name": "Bukhara",
+    "owner": "SOV",
+    "population": 2189596
+  },
+  {
+    "id": 564,
+    "name": "Buryatia",
+    "owner": "SOV",
+    "population": 370893
+  },
+  {
+    "id": 821,
+    "name": "Chechnya-Ingushetia",
+    "owner": "SOV",
+    "population": 731985
+  },
+  {
+    "id": 572,
+    "name": "Chelyabinsk",
+    "owner": "SOV",
+    "population": 2074932
+  },
+  {
+    "id": 203,
+    "name": "Cherkasy",
+    "owner": "SOV",
+    "population": 2405190
+  },
+  {
+    "id": 193,
+    "name": "Chernigov",
+    "owner": "SOV",
+    "population": 1373637
+  },
+  {
+    "id": 563,
+    "name": "Chita",
+    "owner": "SOV",
+    "population": 1044310
+  },
+  {
+    "id": 875,
+    "name": "Chukchi Peninsula",
+    "owner": "SOV",
+    "population": 30000
+  },
+  {
+    "id": 822,
+    "name": "Chukotka",
+    "owner": "SOV",
+    "population": 31182
+  },
+  {
+    "id": 256,
+    "name": "Chuvashia",
+    "owner": "SOV",
+    "population": 786030
+  },
+  {
+    "id": 137,
+    "name": "Crimea",
+    "owner": "SOV",
+    "population": 1061607
+  },
+  {
+    "id": 232,
+    "name": "Dagestan",
+    "owner": "SOV",
+    "population": 1358292
+  },
+  {
+    "id": 226,
+    "name": "Dnipropetrovsk",
+    "owner": "SOV",
+    "population": 2391047
+  },
+  {
+    "id": 516,
+    "name": "Dudinka",
+    "owner": "SOV",
+    "population": 6004
+  },
+  {
+    "id": 829,
+    "name": "Engels-Marxstadt",
+    "owner": "SOV",
+    "population": 618530
+  },
+  {
+    "id": 231,
+    "name": "Georgia",
+    "owner": "SOV",
+    "population": 2457844
+  },
+  {
+    "id": 241,
+    "name": "Gomel",
+    "owner": "SOV",
+    "population": 943422
+  },
+  {
+    "id": 252,
+    "name": "Gorky",
+    "owner": "SOV",
+    "population": 3378176
+  },
+  {
+    "id": 406,
+    "name": "Guryev",
+    "owner": "SOV",
+    "population": 146494
+  },
+  {
+    "id": 566,
+    "name": "Irkutsk",
+    "owner": "SOV",
+    "population": 755237
+  },
+  {
+    "id": 253,
+    "name": "Ivanovo",
+    "owner": "SOV",
+    "population": 2585987
+  },
+  {
+    "id": 827,
+    "name": "Kabardino-Balkaria",
+    "owner": "SOV",
+    "population": 387990
+  },
+  {
+    "id": 247,
+    "name": "Kalinin",
+    "owner": "SOV",
+    "population": 1331211
+  },
+  {
+    "id": 237,
+    "name": "Kalmykia",
+    "owner": "SOV",
+    "population": 169620
+  },
+  {
+    "id": 205,
+    "name": "Kaluga",
+    "owner": "SOV",
+    "population": 1121004
+  },
+  {
+    "id": 637,
+    "name": "Kamchatka",
+    "owner": "SOV",
+    "population": 48831
+  },
+  {
+    "id": 881,
+    "name": "Karagandy",
+    "owner": "SOV",
+    "population": 227016
+  },
+  {
+    "id": 823,
+    "name": "Karakalpakstan",
+    "owner": "SOV",
+    "population": 258430
+  },
+  {
+    "id": 879,
+    "name": "Kargopol",
+    "owner": "SOV",
+    "population": 210177
+  },
+  {
+    "id": 249,
+    "name": "Kazan",
+    "owner": "SOV",
+    "population": 2761291
+  },
+  {
+    "id": 409,
+    "name": "Khabarovsk",
+    "owner": "SOV",
+    "population": 295605
+  },
+  {
+    "id": 569,
+    "name": "Khakassia",
+    "owner": "SOV",
+    "population": 1567322
+  },
+  {
+    "id": 221,
+    "name": "Kharkov",
+    "owner": "SOV",
+    "population": 2227520
+  },
+  {
+    "id": 878,
+    "name": "Khatangsky",
+    "owner": "SOV",
+    "population": 15974
+  },
+  {
+    "id": 196,
+    "name": "Kherson",
+    "owner": "SOV",
+    "population": 728363
+  },
+  {
+    "id": 831,
+    "name": "Khiva",
+    "owner": "SOV",
+    "population": 258430
+  },
+  {
+    "id": 199,
+    "name": "Khmelnytskyi",
+    "owner": "SOV",
+    "population": 1424022
+  },
+  {
+    "id": 202,
+    "name": "Kiev",
+    "owner": "SOV",
+    "population": 2495352
+  },
+  {
+    "id": 575,
+    "name": "Kirensk",
+    "owner": "SOV",
+    "population": 146494
+  },
+  {
+    "id": 400,
+    "name": "Kirov",
+    "owner": "SOV",
+    "population": 2115475
+  },
+  {
+    "id": 644,
+    "name": "Kolyma",
+    "owner": "SOV",
+    "population": 13090
+  },
+  {
+    "id": 583,
+    "name": "Kostanay",
+    "owner": "SOV",
+    "population": 315450
+  },
+  {
+    "id": 880,
+    "name": "Kotlas",
+    "owner": "SOV",
+    "population": 262721
+  },
+  {
+    "id": 234,
+    "name": "Krasnodar",
+    "owner": "SOV",
+    "population": 2903371
+  },
+  {
+    "id": 568,
+    "name": "Krasnoyarsk",
+    "owner": "SOV",
+    "population": 1726427
+  },
+  {
+    "id": 220,
+    "name": "Kursk",
+    "owner": "SOV",
+    "population": 1680086
+  },
+  {
+    "id": 251,
+    "name": "Kuybyshev",
+    "owner": "SOV",
+    "population": 1391819
+  },
+  {
+    "id": 404,
+    "name": "Kyzyl Orda",
+    "owner": "SOV",
+    "population": 447020
+  },
+  {
+    "id": 195,
+    "name": "Leningrad",
+    "owner": "SOV",
+    "population": 3750158
+  },
+  {
+    "id": 258,
+    "name": "Lipetsk",
+    "owner": "SOV",
+    "population": 1282096
+  },
+  {
+    "id": 208,
+    "name": "Luga",
+    "owner": "SOV",
+    "population": 341819
+  },
+  {
+    "id": 874,
+    "name": "Magadan",
+    "owner": "SOV",
+    "population": 63481
+  },
+  {
+    "id": 582,
+    "name": "Magnitogorsk",
+    "owner": "SOV",
+    "population": 1044991
+  },
+  {
+    "id": 833,
+    "name": "Mari El",
+    "owner": "SOV",
+    "population": 786030
+  },
+  {
+    "id": 265,
+    "name": "Mikhaylovka",
+    "owner": "SOV",
+    "population": 468781
+  },
+  {
+    "id": 245,
+    "name": "Millerovo",
+    "owner": "SOV",
+    "population": 761769
+  },
+  {
+    "id": 206,
+    "name": "Minsk",
+    "owner": "SOV",
+    "population": 1163163
+  },
+  {
+    "id": 219,
+    "name": "Moscow",
+    "owner": "SOV",
+    "population": 8335992
+  },
+  {
+    "id": 194,
+    "name": "Mozyr",
+    "owner": "SOV",
+    "population": 934632
+  },
+  {
+    "id": 213,
+    "name": "Murmansk",
+    "owner": "SOV",
+    "population": 275751
+  },
+  {
+    "id": 197,
+    "name": "Mykolaiv",
+    "owner": "SOV",
+    "population": 896311
+  },
+  {
+    "id": 585,
+    "name": "Navoi",
+    "owner": "SOV",
+    "population": 465174
+  },
+  {
+    "id": 825,
+    "name": "Nenets",
+    "owner": "SOV",
+    "population": 21795
+  },
+  {
+    "id": 210,
+    "name": "Nevel",
+    "owner": "SOV",
+    "population": 830133
+  },
+  {
+    "id": 560,
+    "name": "Nikolayevsk",
+    "owner": "SOV",
+    "population": 97663
+  },
+  {
+    "id": 828,
+    "name": "North Ossetia",
+    "owner": "SOV",
+    "population": 387990
+  },
+  {
+    "id": 655,
+    "name": "North Sakhalin",
+    "owner": "SOV",
+    "population": 94759
+  },
+  {
+    "id": 581,
+    "name": "Northern Urals",
+    "owner": "SOV",
+    "population": 48831
+  },
+  {
+    "id": 263,
+    "name": "Novgorod",
+    "owner": "SOV",
+    "population": 1092577
+  },
+  {
+    "id": 570,
+    "name": "Novosibirsk",
+    "owner": "SOV",
+    "population": 1765369
+  },
+  {
+    "id": 192,
+    "name": "Odessa",
+    "owner": "SOV",
+    "population": 1286238
+  },
+  {
+    "id": 562,
+    "name": "Okhotsk",
+    "owner": "SOV",
+    "population": 63480
+  },
+  {
+    "id": 216,
+    "name": "Olonets",
+    "owner": "SOV",
+    "population": 229564
+  },
+  {
+    "id": 571,
+    "name": "Omsk",
+    "owner": "SOV",
+    "population": 1317157
+  },
+  {
+    "id": 215,
+    "name": "Onega",
+    "owner": "SOV",
+    "population": 214858
+  },
+  {
+    "id": 222,
+    "name": "Orel",
+    "owner": "SOV",
+    "population": 1218607
+  },
+  {
+    "id": 652,
+    "name": "Orenburg",
+    "owner": "SOV",
+    "population": 1225870
+  },
+  {
+    "id": 654,
+    "name": "Oyrot Region",
+    "owner": "SOV",
+    "population": 153510
+  },
+  {
+    "id": 732,
+    "name": "Pamir",
+    "owner": "SOV",
+    "population": 1430000
+  },
+  {
+    "id": 882,
+    "name": "Pavlodar",
+    "owner": "SOV",
+    "population": 230210
+  },
+  {
+    "id": 262,
+    "name": "Pechora",
+    "owner": "SOV",
+    "population": 21795
+  },
+  {
+    "id": 255,
+    "name": "Penza",
+    "owner": "SOV",
+    "population": 2342937
+  },
+  {
+    "id": 398,
+    "name": "Perm",
+    "owner": "SOV",
+    "population": 2135879
+  },
+  {
+    "id": 259,
+    "name": "Poltava",
+    "owner": "SOV",
+    "population": 1442584
+  },
+  {
+    "id": 209,
+    "name": "Pskov",
+    "owner": "SOV",
+    "population": 639587
+  },
+  {
+    "id": 243,
+    "name": "Roslavl",
+    "owner": "SOV",
+    "population": 576210
+  },
+  {
+    "id": 218,
+    "name": "Rostov",
+    "owner": "SOV",
+    "population": 1501076
+  },
+  {
+    "id": 254,
+    "name": "Ryazan",
+    "owner": "SOV",
+    "population": 1824120
+  },
+  {
+    "id": 246,
+    "name": "Rzhev",
+    "owner": "SOV",
+    "population": 1025458
+  },
+  {
+    "id": 579,
+    "name": "Salekhard",
+    "owner": "SOV",
+    "population": 45484
+  },
+  {
+    "id": 239,
+    "name": "Saratov",
+    "owner": "SOV",
+    "population": 1226088
+  },
+  {
+    "id": 588,
+    "name": "Semipalatinsk",
+    "owner": "SOV",
+    "population": 429213
+  },
+  {
+    "id": 242,
+    "name": "Smolensk",
+    "owner": "SOV",
+    "population": 1300028
+  },
+  {
+    "id": 233,
+    "name": "Sochi",
+    "owner": "SOV",
+    "population": 387990
+  },
+  {
+    "id": 742,
+    "name": "Stalinabad",
+    "owner": "SOV",
+    "population": 2550000
+  },
+  {
+    "id": 217,
+    "name": "Stalingrad",
+    "owner": "SOV",
+    "population": 1135070
+  },
+  {
+    "id": 227,
+    "name": "Stalino",
+    "owner": "SOV",
+    "population": 3767336
+  },
+  {
+    "id": 235,
+    "name": "Stavropol",
+    "owner": "SOV",
+    "population": 1316516
+  },
+  {
+    "id": 225,
+    "name": "Sumy",
+    "owner": "SOV",
+    "population": 1338280
+  },
+  {
+    "id": 577,
+    "name": "Surgut",
+    "owner": "SOV",
+    "population": 29299
+  },
+  {
+    "id": 653,
+    "name": "Sverdlovsk",
+    "owner": "SOV",
+    "population": 2161650
+  },
+  {
+    "id": 397,
+    "name": "Syktyvkar",
+    "owner": "SOV",
+    "population": 137203
+  },
+  {
+    "id": 257,
+    "name": "Tambov",
+    "owner": "SOV",
+    "population": 1779583
+  },
+  {
+    "id": 832,
+    "name": "Tashauz",
+    "owner": "SOV",
+    "population": 133065
+  },
+  {
+    "id": 405,
+    "name": "Tashkent",
+    "owner": "SOV",
+    "population": 4137910
+  },
+  {
+    "id": 264,
+    "name": "Tikhvin",
+    "owner": "SOV",
+    "population": 185559
+  },
+  {
+    "id": 580,
+    "name": "Tobolsk",
+    "owner": "SOV",
+    "population": 88126
+  },
+  {
+    "id": 578,
+    "name": "Tomsk",
+    "owner": "SOV",
+    "population": 609304
+  },
+  {
+    "id": 223,
+    "name": "Tula",
+    "owner": "SOV",
+    "population": 1635549
+  },
+  {
+    "id": 403,
+    "name": "Tyumen",
+    "owner": "SOV",
+    "population": 939067
+  },
+  {
+    "id": 876,
+    "name": "Udachny",
+    "owner": "SOV",
+    "population": 12182
+  },
+  {
+    "id": 399,
+    "name": "Udmurtia",
+    "owner": "SOV",
+    "population": 1324935
+  },
+  {
+    "id": 651,
+    "name": "Ufa",
+    "owner": "SOV",
+    "population": 2552075
+  },
+  {
+    "id": 250,
+    "name": "Ulyanovsky",
+    "owner": "SOV",
+    "population": 1630524
+  },
+  {
+    "id": 407,
+    "name": "Ural'sk",
+    "owner": "SOV",
+    "population": 268572
+  },
+  {
+    "id": 587,
+    "name": "Ust Urt",
+    "owner": "SOV",
+    "population": 245133
+  },
+  {
+    "id": 877,
+    "name": "Verkhoyansk",
+    "owner": "SOV",
+    "population": 13055
+  },
+  {
+    "id": 198,
+    "name": "Vinnytsia",
+    "owner": "SOV",
+    "population": 1893391
+  },
+  {
+    "id": 207,
+    "name": "Vitebsk",
+    "owner": "SOV",
+    "population": 1217854
+  },
+  {
+    "id": 408,
+    "name": "Vladivostok",
+    "owner": "SOV",
+    "population": 841465
+  },
+  {
+    "id": 238,
+    "name": "Volgodonsk",
+    "owner": "SOV",
+    "population": 556677
+  },
+  {
+    "id": 244,
+    "name": "Volkhov",
+    "owner": "SOV",
+    "population": 195325
+  },
+  {
+    "id": 351,
+    "name": "Vologda",
+    "owner": "SOV",
+    "population": 2352100
+  },
+  {
+    "id": 260,
+    "name": "Voronezh",
+    "owner": "SOV",
+    "population": 2567983
+  },
+  {
+    "id": 228,
+    "name": "Voroshilovgrad",
+    "owner": "SOV",
+    "population": 2167411
+  },
+  {
+    "id": 574,
+    "name": "Yakutsk",
+    "owner": "SOV",
+    "population": 407866
+  },
+  {
+    "id": 824,
+    "name": "Yamalia",
+    "owner": "SOV",
+    "population": 21974
+  },
+  {
+    "id": 248,
+    "name": "Yaroslavl",
+    "owner": "SOV",
+    "population": 1664541
+  },
+  {
+    "id": 576,
+    "name": "Yeniseisk",
+    "owner": "SOV",
+    "population": 117195
+  },
+  {
+    "id": 200,
+    "name": "Zaporozhe",
+    "owner": "SOV",
+    "population": 1294082
+  },
+  {
+    "id": 201,
+    "name": "Zhytomyr",
+    "owner": "SOV",
+    "population": 1417834
+  },
+  {
+    "id": 573,
+    "name": "Zlatoust",
+    "owner": "SOV",
+    "population": 556677
+  },
+  {
+    "id": 790,
+    "name": "Asturias",
+    "owner": "SPR",
+    "population": 1197252
+  },
+  {
+    "id": 176,
+    "name": "Burgos",
+    "owner": "SPR",
+    "population": 739760
+  },
+  {
+    "id": 165,
+    "name": "Catalonia",
+    "owner": "SPR",
+    "population": 3036537
+  },
+  {
+    "id": 175,
+    "name": "Ciudad Real",
+    "owner": "SPR",
+    "population": 526903
+  },
+  {
+    "id": 789,
+    "name": "Córdoba",
+    "owner": "SPR",
+    "population": 1428513
+  },
+  {
+    "id": 794,
+    "name": "Eastern Aragón",
+    "owner": "SPR",
+    "population": 387366
+  },
+  {
+    "id": 297,
+    "name": "Equatorial Guinea",
+    "owner": "SPR",
+    "population": 185000
+  },
+  {
+    "id": 170,
+    "name": "Extremadura",
+    "owner": "SPR",
+    "population": 1417652
+  },
+  {
+    "id": 171,
+    "name": "Galicia",
+    "owner": "SPR",
+    "population": 2295085
+  },
+  {
+    "id": 173,
+    "name": "Granada",
+    "owner": "SPR",
+    "population": 1662292
+  },
+  {
+    "id": 793,
+    "name": "Guadalajara",
+    "owner": "SPR",
+    "population": 527697
+  },
+  {
+    "id": 177,
+    "name": "Islas Baleares",
+    "owner": "SPR",
+    "population": 365500
+  },
+  {
+    "id": 178,
+    "name": "Islas Canarias",
+    "owner": "SPR",
+    "population": 561347
+  },
+  {
+    "id": 174,
+    "name": "León",
+    "owner": "SPR",
+    "population": 749041
+  },
+  {
+    "id": 41,
+    "name": "Madrid",
+    "owner": "SPR",
+    "population": 2064659
+  },
+  {
+    "id": 168,
+    "name": "Murcia",
+    "owner": "SPR",
+    "population": 1007605
+  },
+  {
+    "id": 172,
+    "name": "Navarra",
+    "owner": "SPR",
+    "population": 359880
+  },
+  {
+    "id": 792,
+    "name": "País Vasco",
+    "owner": "SPR",
+    "population": 928094
+  },
+  {
+    "id": 699,
+    "name": "Rio de Oro",
+    "owner": "SPR",
+    "population": 21056
+  },
+  {
+    "id": 788,
+    "name": "Salamanca",
+    "owner": "SPR",
+    "population": 364601
+  },
+  {
+    "id": 169,
+    "name": "Sevilla",
+    "owner": "SPR",
+    "population": 1746650
+  },
+  {
+    "id": 783,
+    "name": "Sidi Ifni",
+    "owner": "SPR",
+    "population": 11043
+  },
+  {
+    "id": 290,
+    "name": "Spanish Africa",
+    "owner": "SPR",
+    "population": 744000
+  },
+  {
+    "id": 167,
+    "name": "Valencia",
+    "owner": "SPR",
+    "population": 1979294
+  },
+  {
+    "id": 791,
+    "name": "Valladolid",
+    "owner": "SPR",
+    "population": 713628
+  },
+  {
+    "id": 166,
+    "name": "Western Aragón",
+    "owner": "SPR",
+    "population": 668365
+  },
+  {
+    "id": 915,
+    "name": "Bohuslän",
+    "owner": "SWE",
+    "population": 96212
+  },
+  {
+    "id": 916,
+    "name": "Dalarna",
+    "owner": "SWE",
+    "population": 249717
+  },
+  {
+    "id": 124,
+    "name": "Gotland",
+    "owner": "SWE",
+    "population": 56988
+  },
+  {
+    "id": 38,
+    "name": "Gävleborg",
+    "owner": "SWE",
+    "population": 931955
+  },
+  {
+    "id": 917,
+    "name": "Jämtland",
+    "owner": "SWE",
+    "population": 65000
+  },
+  {
+    "id": 666,
+    "name": "Norrbotten",
+    "owner": "SWE",
+    "population": 100222
+  },
+  {
+    "id": 138,
+    "name": "Skåne",
+    "owner": "SWE",
+    "population": 1047701
+  },
+  {
+    "id": 139,
+    "name": "Småland",
+    "owner": "SWE",
+    "population": 390366
+  },
+  {
+    "id": 141,
+    "name": "Södermanland",
+    "owner": "SWE",
+    "population": 1488181
+  },
+  {
+    "id": 919,
+    "name": "Värmland",
+    "owner": "SWE",
+    "population": 296653
+  },
+  {
+    "id": 918,
+    "name": "Västerbotten",
+    "owner": "SWE",
+    "population": 315105
+  },
+  {
+    "id": 140,
+    "name": "Västergötland",
+    "owner": "SWE",
+    "population": 889962
+  },
+  {
+    "id": 913,
+    "name": "Östergötland",
+    "owner": "SWE",
+    "population": 505226
+  },
+  {
+    "id": 151,
+    "name": "Eastern Swiss Alps",
+    "owner": "SWI",
+    "population": 598920
+  },
+  {
+    "id": 845,
+    "name": "Jura Mountains",
+    "owner": "SWI",
+    "population": 2067296
+  },
+  {
+    "id": 3,
+    "name": "Swiss Plateau",
+    "owner": "SWI",
+    "population": 1216838
+  },
+  {
+    "id": 846,
+    "name": "Ticino",
+    "owner": "SWI",
+    "population": 160553
+  },
+  {
+    "id": 847,
+    "name": "Western Swiss Alps",
+    "owner": "SWI",
+    "population": 178429
+  },
+  {
+    "id": 343,
+    "name": "Afyon",
+    "owner": "TUR",
+    "population": 1298543
+  },
+  {
+    "id": 798,
+    "name": "Amasya",
+    "owner": "TUR",
+    "population": 531172
+  },
+  {
+    "id": 49,
+    "name": "Ankara",
+    "owner": "TUR",
+    "population": 810284
+  },
+  {
+    "id": 342,
+    "name": "Antalya",
+    "owner": "TUR",
+    "population": 362689
+  },
+  {
+    "id": 340,
+    "name": "Bursa",
+    "owner": "TUR",
+    "population": 1077853
+  },
+  {
+    "id": 350,
+    "name": "Diyarbakır",
+    "owner": "TUR",
+    "population": 571935
+  },
+  {
+    "id": 341,
+    "name": "Edirne",
+    "owner": "TUR",
+    "population": 363947
+  },
+  {
+    "id": 352,
+    "name": "Hakkari",
+    "owner": "TUR",
+    "population": 262095
+  },
+  {
+    "id": 797,
+    "name": "Istanbul",
+    "owner": "TUR",
+    "population": 1042276
+  },
+  {
+    "id": 339,
+    "name": "Izmir",
+    "owner": "TUR",
+    "population": 1401889
+  },
+  {
+    "id": 347,
+    "name": "Izmit",
+    "owner": "TUR",
+    "population": 807660
+  },
+  {
+    "id": 356,
+    "name": "Kastamonu",
+    "owner": "TUR",
+    "population": 860589
+  },
+  {
+    "id": 348,
+    "name": "Kayseri",
+    "owner": "TUR",
+    "population": 858452
+  },
+  {
+    "id": 346,
+    "name": "Konya",
+    "owner": "TUR",
+    "population": 849453
+  },
+  {
+    "id": 344,
+    "name": "Malatya",
+    "owner": "TUR",
+    "population": 1081781
+  },
+  {
+    "id": 345,
+    "name": "Mersin",
+    "owner": "TUR",
+    "population": 411798
+  },
+  {
+    "id": 355,
+    "name": "Samsun",
+    "owner": "TUR",
+    "population": 1151863
+  },
+  {
+    "id": 349,
+    "name": "Sivas",
+    "owner": "TUR",
+    "population": 592821
+  },
+  {
+    "id": 354,
+    "name": "Trabzon",
+    "owner": "TUR",
+    "population": 1031129
+  },
+  {
+    "id": 353,
+    "name": "Tunceli",
+    "owner": "TUR",
+    "population": 523537
+  },
+  {
+    "id": 800,
+    "name": "Van",
+    "owner": "TUR",
+    "population": 365490
+  },
+  {
+    "id": 104,
+    "name": "Bosnia",
+    "owner": "YUG",
+    "population": 1910200
+  },
+  {
+    "id": 109,
+    "name": "Croatia",
+    "owner": "YUG",
+    "population": 2224400
+  },
+  {
+    "id": 103,
+    "name": "Dalmatia",
+    "owner": "YUG",
+    "population": 1431700
+  },
+  {
+    "id": 970,
+    "name": "Debar",
+    "owner": "YUG",
+    "population": 343550
+  },
+  {
+    "id": 804,
+    "name": "Herzegovina",
+    "owner": "YUG",
+    "population": 547200
+  },
+  {
+    "id": 802,
+    "name": "Kosovo",
+    "owner": "YUG",
+    "population": 616000
+  },
+  {
+    "id": 853,
+    "name": "Ljubljana",
+    "owner": "YUG",
+    "population": 333250
+  },
+  {
+    "id": 106,
+    "name": "Macedonia",
+    "owner": "YUG",
+    "population": 1030650
+  },
+  {
+    "id": 105,
+    "name": "Montenegro",
+    "owner": "YUG",
+    "population": 895500
+  },
+  {
+    "id": 108,
+    "name": "Morava",
+    "owner": "YUG",
+    "population": 707000
+  },
+  {
+    "id": 102,
+    "name": "North Slovenia",
+    "owner": "YUG",
+    "population": 811050
+  },
+  {
+    "id": 107,
+    "name": "Serbia",
+    "owner": "YUG",
+    "population": 1279121
+  },
+  {
+    "id": 803,
+    "name": "Southern Serbia",
+    "owner": "YUG",
+    "population": 210000
+  },
+  {
+    "id": 45,
+    "name": "Vojvodina",
+    "owner": "YUG",
+    "population": 838621
+  },
+  {
+    "id": 764,
+    "name": "West Banat",
+    "owner": "YUG",
+    "population": 585579
+  }
+]

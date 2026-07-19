@@ -1,0 +1,20 @@
+HOI4 Focus Studio v3
+
+- Shows the actual HOI4 focus icons instead of generic stars.
+- Mouse-wheel zoom centers on the cursor.
+- Hold the left mouse button on empty space and drag to pan around the tree.
+- Hold the left mouse button on a focus and drag it to move it.
+- Right-click empty space to place a new focus at the cursor.
+- Right-click a focus to connect it, replace its icon, or attach an event.
+- Custom icons can also be dragged directly onto a focus.
+- Added normal country-event and newspaper news-event previews.
+- Event pictures, titles, descriptions, options, triggers, and effects are editable.
+- Events attached to focuses are written into completion_reward during export.
+
+Controls
+--------
+Mouse wheel: zoom in or out
+Left-drag empty background: move around the tree
+Left-drag focus: move focus
+Right-click background: place focus / connect
+Right-click focus: connections / icons / events

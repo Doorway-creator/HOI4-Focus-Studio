@@ -1,0 +1,17 @@
+HOI4 Focus Studio v5 - Decisions, Characters, and Technology
+
+- Added a Decisions editor tab.
+- Decisions can be standalone or unlocked by a selected focus.
+- Decision settings: name, description, PP cost, active/countdown days,
+  political-power reward, one-time manpower addition/removal, and temporary or
+  permanent recruitable-manpower modifiers.
+- Multiple decisions can be attached to the same focus.
+- Added a Characters editor tab.
+- Characters support imported portraits, names, IDs, skill, and General,
+  Admiral, or military high-command Officer roles.
+- Characters can be recruited by a focus or a decision.
+- Added technology rewards to the focus reward builder.
+- Technology can be researched/unlocked immediately or receive a one-use
+  research bonus.
+- Export now generates decision categories, decisions, character definitions,
+  portrait DDS files, permanent decision ideas, focus unlocks, and localisation.

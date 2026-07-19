@@ -1,0 +1,8 @@
+HOI4 Focus Studio v6.5 - National Spirits
+
+- Added a National Spirits tab.
+- Create named national spirits with descriptions, custom IDs and raw HOI4 modifiers.
+- Choose an image directly from your files; Studio stores it in the project and exports a centered 64x64 DDS icon.
+- Link each spirit to a focus that grants it and optionally a focus that removes it.
+- Export generates common/ideas, interface sprite definitions, localisation and add_ideas/remove_ideas focus rewards.
+- Lossless project sidecar preserves all national spirit data on re-import.

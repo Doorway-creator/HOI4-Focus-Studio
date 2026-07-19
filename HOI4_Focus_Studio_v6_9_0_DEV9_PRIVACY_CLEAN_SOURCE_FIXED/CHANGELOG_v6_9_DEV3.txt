@@ -1,0 +1,17 @@
+HOI4 Focus Studio v6.9.0 DEV3
+
+NEW CHARACTER WORKSPACE
+- Separate tabs for Generals, Field Officers, Admirals and Captains.
+- Working On and Finished folders with one-click movement between them.
+- Search by character name or ID.
+- Expanded editor: biography, portrait, role, skill and role-specific stats.
+- Army stats: attack, defence, planning and logistics.
+- Naval stats: attack, defence, maneuvering and coordination.
+- Trait IDs, availability script, recruitment focus/decision and raw script fields.
+- Existing older "Officer" entries migrate to Field Officer automatically.
+- Character status and all new fields persist in project saves.
+- Exporter writes the new army/navy stats, traits, availability and raw script.
+
+ALREADY INCLUDED FROM DEV1/DEV2
+- Versioned export names and automatic version bumping.
+- Circle/square crop guides, cut outside guide and fit inside guide.

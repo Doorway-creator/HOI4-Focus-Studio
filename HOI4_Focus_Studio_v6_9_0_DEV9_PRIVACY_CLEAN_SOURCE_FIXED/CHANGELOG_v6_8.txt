@@ -1,0 +1,12 @@
+HOI4 Focus Studio v6.8 — Construction Planner & Stable Test Build
+
+- Multi-province construction planner with click-to-add levels.
+- Right-side queue with plus, minus, remove, clear, undo and totals.
+- Commits one reward per selected province.
+- Preserves manual province selection.
+- Opens normal export folder automatically (optional checkbox).
+- Renames generated test mod to Norway Remade with version in launcher title.
+- Uses stable Norway_Remade_Test folder and .mod file.
+- Installs directly to the configured HOI4 mod directory.
+- Creates timestamped backups before replacing test builds.
+- Retains v6.7 map picker, national spirits, icon import fixes and UTF-8/BOM fixes.

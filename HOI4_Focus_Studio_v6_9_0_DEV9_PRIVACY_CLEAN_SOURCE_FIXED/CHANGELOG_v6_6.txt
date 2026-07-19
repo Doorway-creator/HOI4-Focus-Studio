@@ -1,0 +1,6 @@
+HOI4 Focus Studio v6.6 — BOM Export Fix
+
+- Fixed exported .gfx files being written with a UTF-8 BOM.
+- HOI4 script files, focus files, event files, idea files, descriptors and sprite definitions now export as UTF-8 without BOM.
+- Localisation .yml remains UTF-8 with BOM, as required by Hearts of Iron IV.
+- Fixes custom focus icons appearing as question marks after export or Install Test Build.

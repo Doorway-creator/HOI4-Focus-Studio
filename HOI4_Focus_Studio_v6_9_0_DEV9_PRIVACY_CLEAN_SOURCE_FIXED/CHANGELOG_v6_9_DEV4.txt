@@ -1,0 +1,8 @@
+HOI4 Focus Studio v6.9.0 DEV4
+
+- Fixed Install Test Build erasing older custom focus icon sprite definitions.
+- Export now preserves every existing .gfx registry instead of replacing NHO_editor_icons.gfx.
+- Generated focus icon definitions are written to a separate merge-safe file.
+- Export scans nested gfx/interface/goals folders and uses the correct relative texture paths.
+- Export validates every referenced custom icon and stops with an error when its DDS file is missing.
+- Generated .gfx files use plain UTF-8 without BOM and Windows-safe line endings.

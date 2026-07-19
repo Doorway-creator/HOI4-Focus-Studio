@@ -1,0 +1,9 @@
+HOI4 Focus Studio v2
+
+- Fixed HOI4 relative_position_id coordinate imports.
+- Every v0.76 focus is now displayed at its true absolute tree position.
+- Expanded the editor canvas so the complete Norway tree fits without clipping.
+- Verified 54 focuses at 54 unique positions.
+
+Projects saved with the incorrect v1 layout should not be reused. Start from the
+preloaded v2 New HOI4 Project project instead.

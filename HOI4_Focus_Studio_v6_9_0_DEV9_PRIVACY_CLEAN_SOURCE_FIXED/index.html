@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HOI4 Focus Studio v6.9 Development Build 3</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <strong>HOI4 Focus Studio</strong>
+  <nav><button data-tab="tree" class="active">Focus tree</button><button data-tab="events">Events</button><button data-tab="decisions">Decisions</button><button data-tab="characters">Characters</button><button data-tab="spirits">National spirits</button><button data-tab="icons">Icon converter</button><button data-tab="import">Import mod</button></nav>
+  <label class="map-profile-control">Map profile
+    <select id="mapProfile"><option value="vanilla">Vanilla HOI4</option><option value="r56">Road to 56</option></select>
+  </label>
+  <span id="mapProfileBadge" class="profile-badge">Loading map…</span>
+  <span id="status">Loading…</span>
+  <button id="undo">Undo</button><button id="redo">Redo</button><button id="save">Save project</button><button id="export">Export HOI4 mod</button><button id="install" class="primary">Install test build</button>
+</header>
+
+<main id="treeTab" class="tab active">
+  <aside class="tools">
+    <button id="addFocus" class="primary">+ New focus</button>
+    <button id="repairFocusIds">Repair temporary focus IDs</button>
+    <label>Connection type<select id="linkType"><option value="prerequisite">Prerequisite</option><option value="visual">Visual only</option><option value="mutual">Mutually exclusive</option></select></label>
+    <button id="startLink">Connect selected…</button><button id="deleteFocus" class="danger">Delete selected</button>
+    <hr><label>Zoom<input id="zoom" type="range" min="45" max="125" value="75"></label>
+    <p class="hint">Drag focuses to move them. Select one, choose a connection type, press Connect, then click the destination.</p>
+    <details open><summary>Export versioning</summary>
+      <label>Current released version<input id="exportVersion" value="v0_80" placeholder="v0_80"></label>
+      <label>Next export type<select id="versionBump"><option value="minor">New version (v0_80 → v0_81)</option><option value="hotfix">Small fix (v0_80 → v0_80_1)</option><option value="keep">Keep exact version</option></select></label>
+      <label>Export file name preview<input id="exportNamePreview" readonly></label>
+      <label class="checkline"><input id="openExportFolder" type="checkbox" checked> Open export folder after normal export</label>
+      <p class="hint">A normal export advances the main version. A small fix adds or advances the final hotfix number. After a successful export, Studio remembers the exported version as the new current version.</p>
+    </details>
+    <details><summary>Export and test instructions</summary><p class="hint"><strong>Install test build</strong> automatically exports and copies a separate test mod into <code>Documents\Paradox Interactive\Hearts of Iron IV\mod</code>. Open the HOI4 launcher, enable your exported test mod, and disable older copies of that mod. <strong>Export HOI4 mod</strong> creates a versioned ZIP and folder inside this Studio's <code>exports</code> folder.</p></details>
+  </aside>
+  <section id="viewport"><div id="world"><svg id="edges"></svg><div id="nodes"></div></div></section>
+  <aside id="focusEditor" class="editor"><h2>Focus</h2><p>Select a focus.</p></aside>
+</main>
+
+<main id="importTab" class="tab">
+  <section class="formpage import-page">
+    <h2>Import a mod back into Focus Studio</h2>
+    <p>Select or drag the mod folder itself. Studio reads its focus tree and editor data; large 3D models and unrelated mod files are ignored.</p>
+    <div id="modDropZone" class="mod-drop"><strong>Drop the exported mod folder here</strong><span>or click to select the folder</span><input id="modFolder" type="file" webkitdirectory directory multiple></div>
+    <button id="importMod" class="primary" disabled>Import focus tree</button>
+    <p id="importResult" class="hint">Importing replaces the currently open editor project after creating a backup.</p>
+  </section>
+</main>
+
+<main id="eventsTab" class="tab">
+  <aside class="tools"><button id="addEvent" class="primary">+ New event</button><div id="eventList"></div></aside>
+  <section class="formpage" id="eventEditor"><h2>Events</h2><p>Create or select an event.</p></section>
+</main>
+
+<main id="decisionsTab" class="tab">
+  <aside class="tools"><button id="addDecision" class="primary">+ Standalone decision</button><div id="decisionList"></div></aside>
+  <section class="formpage" id="decisionEditor"><h2>Decisions</h2><p>Create a standalone decision or attach one by right-clicking a focus.</p></section>
+</main>
+
+<main id="charactersTab" class="tab">
+  <aside class="tools character-tools">
+    <button id="addCharacter" class="primary">+ New character</button>
+    <label>Service tab<select id="characterRoleFilter"><option value="General">Generals</option><option value="Field Officer">Field officers</option><option value="Admiral">Admirals</option><option value="Captain">Captains</option></select></label>
+    <div class="character-status-tabs"><button id="showWorking" class="active">Working On</button><button id="showFinished">Finished</button></div>
+    <label>Search<input id="characterSearch" placeholder="Name or ID"></label>
+    <div id="characterList"></div>
+  </aside>
+  <section class="formpage" id="characterEditor"><h2>Characters</h2><p>Create a character or select one from a service tab.</p></section>
+</main>
+
+
+<main id="spiritsTab" class="tab">
+  <aside class="tools"><button id="addSpirit" class="primary">+ New national spirit</button><div id="spiritList"></div></aside>
+  <section class="formpage" id="spiritEditor"><h2>National spirits</h2><p>Create or select a national spirit.</p></section>
+</main>
+
+<main id="iconsTab" class="tab">
+  <section class="iconwork">
+    <div id="dropZone"><strong>Drop a picture here</strong><span>or click to select PNG, JPG or WebP</span><input id="iconFile" type="file" accept="image/*"></div>
+    <canvas id="iconCanvas" width="380" height="340"></canvas>
+    <div class="iconcontrols">
+      <label>Icon name<input id="iconName" value="custom_focus_icon"></label>
+      <label>Scale<input id="iconScale" type="range" min="20" max="300" value="100"></label>
+      <label>Horizontal<input id="iconX" type="range" min="-100" max="100" value="0"></label>
+      <label>Crop guide<select id="iconGuide"><option value="square">Square — 95×85</option><option value="circle">Circle — transparent corners</option></select></label>
+      <label class="icon-toggle"><input id="iconOverlay" type="checkbox" checked> Show crop outline</label>
+      <label>Vertical<input id="iconY" type="range" min="-100" max="100" value="0"></label>
+      <div class="icon-action-row"><button id="fitIcon">Fit inside guide</button><button id="cutIcon">Cut outside guide</button></div>
+      <button id="resetIconCut">Restore uncut picture</button>
+      <button id="makeIcon" class="primary">Create 95×85 PNG + DDS</button>
+      <p id="iconCutState" class="hint">No destructive cut applied. The selected guide is used during export.</p>
+      <p id="iconResult" class="hint"></p>
+    </div>
+  </section>
+</main>
+
+<dialog id="provincePicker" class="province-picker-dialog">
+  <div class="province-picker-head"><div><h2 id="provincePickerTitle">Province construction planner</h2><p id="provincePickerHelp" class="hint"></p></div><button id="closeProvincePicker">Close</button></div>
+  <div class="province-planner-layout"><div class="province-map-wrap"><canvas id="provinceMap"></canvas></div><aside class="province-plan"><h3>Construction plan</h3><div id="provincePlanList"></div><strong id="provincePlanTotal">0 provinces · 0 levels</strong><div class="province-plan-actions"><button id="undoProvincePlan">Undo last</button><button id="clearProvincePlan">Clear</button></div><button id="commitProvincePlan" class="primary" disabled>Add selected rewards</button></aside></div>
+  <div class="province-picker-foot"><strong id="provinceHover">Move over a province</strong><span id="provinceSelection" class="hint">Build a queue, then add all selected rewards.</span></div>
+</dialog>
+<dialog id="message"><p></p><button>OK</button></dialog>
+<div id="contextMenu" class="context-menu" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

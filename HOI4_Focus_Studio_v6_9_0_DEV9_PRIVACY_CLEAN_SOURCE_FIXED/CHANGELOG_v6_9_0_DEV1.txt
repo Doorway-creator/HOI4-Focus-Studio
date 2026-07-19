@@ -1,0 +1,17 @@
+HOI4 Focus Studio v6.9.0 Development Build 1
+
+Implemented first requested v6.9 feature: automatic versioned exports.
+
+- Added Current released version field.
+- Added New version, Small fix, and Keep exact version export modes.
+- New version example: v0_80 -> v0_81.
+- Small fix example: v0_80 -> v0_80_1, then v0_80_2.
+- Exports now create a ZIP named like Norway_Remade_v0_81.zip.
+- The successful exported version becomes the project's new current version.
+- Added export filename preview before exporting.
+- Legacy editor-only version strings migrate to v0_80.
+
+Note: Studio preview icons and in-game GFX registration are separate systems. Seeing an
+icon inside Studio confirms the source image is loaded, but the exporter must still create
+valid HOI4 spriteType definitions and texture paths. Export validation improvements remain
+part of the ongoing v6.9 work.

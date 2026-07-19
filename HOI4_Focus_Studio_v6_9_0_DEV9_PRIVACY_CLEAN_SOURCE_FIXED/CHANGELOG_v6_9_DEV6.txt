@@ -1,0 +1,12 @@
+HOI4 Focus Studio v6.9.0 DEV6 — Event Preview Fix
+
+- Rebuilt Country Event preview from HOI4 EventWindow geometry.
+- Rebuilt News Event preview from HOI4 EventWindow_News geometry.
+- Shows live title, description, picture placement, and option buttons.
+- Added image Fill frame, Fit whole picture, and Stretch modes.
+- Added picture scale and horizontal/vertical positioning controls.
+- Added 75%, 100%, and 125% preview zoom.
+- Export now renders country-event pictures at 210x176.
+- Export now renders news-event pictures at 397x153.
+- Export applies the same crop, scale, and position used in the preview.
+- Preserves all DEV5 icon installer and validation fixes.

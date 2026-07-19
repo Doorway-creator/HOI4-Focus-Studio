@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+exports/
+backups/
+imports/
+projects/*.json
+!projects/default_project.json
+*.spec
+build/
+dist/

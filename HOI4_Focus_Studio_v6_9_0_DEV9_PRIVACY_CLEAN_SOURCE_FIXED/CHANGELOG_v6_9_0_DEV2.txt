@@ -1,0 +1,15 @@
+HOI4 Focus Studio v6.9.0 DEV2
+
+ICON CONVERTER
+- Added Square and Circle crop guides.
+- Added a Show crop outline toggle.
+- Added Fit inside guide.
+- Added Cut outside guide; circle cuts create transparent corners.
+- Added Restore uncut picture.
+- PNG and DDS export now respect the selected circle mask.
+
+VERSIONING
+- Keeps the DEV1 automatic mod-version export controls.
+
+NOTE
+- This is a development build toward the full v6.9.0 event/character/export overhaul.

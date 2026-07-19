@@ -1,0 +1,9 @@
+HOI4 Focus Studio v6.9.0 DEV7
+
+- Focus IDs can now stay synchronized with focus names.
+- New focuses enable automatic ID synchronization by default.
+- Imported focuses with stable historical IDs remain manual unless enabled.
+- Added an Update ID from name button for individual focuses.
+- Added Repair temporary focus IDs to convert NHO_NOR_new_focus placeholders in bulk.
+- Renaming an ID updates prerequisites, mutual exclusions, visual links, linked events, decisions, characters, national spirits, and raw script references.
+- Existing icon keys are deliberately preserved when an ID changes, preventing working DDS assets from being orphaned.

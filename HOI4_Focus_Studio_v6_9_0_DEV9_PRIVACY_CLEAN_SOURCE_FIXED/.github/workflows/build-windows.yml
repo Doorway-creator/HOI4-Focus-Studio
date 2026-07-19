@@ -1,0 +1,43 @@
+name: Build Windows app
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements.txt pyinstaller
+      - name: Build standalone folder
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --onedir --name "HOI4 Focus Studio" `
+            --add-data "index.html;." `
+            --add-data "app.js;." `
+            --add-data "style.css;." `
+            --add-data "data;data" `
+            --add-data "icon-previews;icon-previews" `
+            --add-data "base_mod;base_mod" `
+            --add-data "projects/default_project.json;projects" `
+            server.py
+      - name: Privacy scan build output
+        shell: pwsh
+        run: |
+          $patterns = 'gmail\.com|api[_-]?key|bearer|authorization|C:\\Users\\'
+          $hits = Get-ChildItem -Recurse dist -File | Where-Object { $_.Extension -match '\.(txt|json|js|html|css|py|mod|yml|yaml|ini|cfg)$' } | Select-String -Pattern $patterns -CaseSensitive:$false
+          if ($hits) { $hits | Format-Table; throw 'Privacy scan failed.' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HOI4-Focus-Studio-Windows
+          path: dist/HOI4 Focus Studio/

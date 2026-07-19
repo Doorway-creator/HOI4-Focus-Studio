@@ -1,0 +1,16 @@
+HOI4 Focus Studio v4 - WYSIWYG and Reward Builder
+
+- Changed the editor to HOI4's approximate 96 x 130 focus-coordinate scale.
+  Adjacent focuses that overlap in Studio should now overlap in-game too.
+- Expanded the workspace to 20,000 x 6,000 pixels for much wider trees.
+- Added a structured focus reward builder.
+- Political rewards: political power, stability, war support, ideology
+  popularity, positive or negative values, and timed modifiers.
+- Added Norway's 11 starting states with population and province information.
+- State construction: civilian factories, military factories, dockyards,
+  land forts, coastal forts, anti-air, airbases, and naval bases.
+- Added an Install Test Build button that exports directly into the normal
+  HOI4 user mod directory under a separate test-mod name.
+- Added export and test instructions inside the editor.
+
+Important: close any older Focus Studio launcher window before starting v4.

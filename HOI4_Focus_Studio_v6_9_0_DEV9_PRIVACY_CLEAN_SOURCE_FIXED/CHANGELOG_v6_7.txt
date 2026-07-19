@@ -1,0 +1,11 @@
+HOI4 Focus Studio v6.7 — Province Map Picker
+
+- Added coloured Vanilla HOI4 / Road to 56 map-profile selector.
+- Each project remembers its selected map profile.
+- Added clickable, real-province map picker for Norwegian state construction rewards.
+- Hover shows province ID, type, coast status and terrain.
+- Click fills the Province field automatically.
+- Existing state rewards remember which map profile created them.
+- Export and Install Test Build are blocked when state/province IDs do not match the selected map.
+- Added automatic project saving and rotating five-minute backups.
+- Included preprocessed Vanilla and Road to 56 Norwegian province maps.

@@ -1,0 +1,5 @@
+HOI4 Focus Studio v6.9.0 DEV6.1
+
+- Fixed event preview collapsing into a tiny line/dot in Chromium.
+- Preview zoom now uses a valid numeric browser zoom value.
+- Country and World News windows render at 75%, 100%, and 125% correctly.
