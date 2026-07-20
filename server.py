@@ -29,22 +29,45 @@ from source_catalog import SourceCatalog
 from source_importer import import_sources
 from project_content import character_action_script, spirit_action_script
 from clausewitz_parser import Block, parse as parse_clausewitz, serialize as serialize_clausewitz
+from project_storage import ProjectStorage, default_app_data_root
+from base_source import BaseSourceRequired, recover_base_source, require_base_source
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_FILE = ROOT / "projects" / "default_project.json"
-SOURCE_MOD = ROOT / "base_mod" / "Norwegian_Kings_Yes_DLC_Tree_Test"
 EXPORT_ROOT = ROOT / "exports"
 APP_VERSION = "6.11.0"
 GITHUB_RELEASES_API = "https://api.github.com/repos/Doorway-creator/HOI4-Focus-Studio/releases/latest"
 UPDATE_ROOT = ROOT / "updates"
-SOURCE_ROOT = Path(os.environ.get("LOCALAPPDATA", ROOT)) / "HOI4 Focus Studio" / "sources"
+APP_DATA_ROOT = default_app_data_root()
+PROJECT_STORAGE = ProjectStorage(APP_DATA_ROOT, PROJECT_FILE)
+SOURCE_ROOT = APP_DATA_ROOT / "sources"
 SOURCE_CATALOG = SourceCatalog(SOURCE_ROOT / "catalog.sqlite3")
 LOCAL_PATH_FIELDS = {"exportPath", "hoi4ModFolder"}
+
+
+class CleanupDirectory:
+    """A deterministic staging directory that also cleans itself during exception unwinding."""
+    def __init__(self, parent: Path, prefix: str):
+        self.path = Path(tempfile.mkdtemp(prefix=prefix, dir=parent))
+    @property
+    def name(self): return str(self.path)
+    def cleanup(self):
+        if self.path.exists(): shutil.rmtree(self.path, ignore_errors=True)
+    def __del__(self): self.cleanup()
 
 
 def public_project(project: dict) -> dict:
     """Keep computer-specific paths out of projects, backups, and exported mods."""
     return {key: value for key, value in project.items() if key not in LOCAL_PATH_FIELDS}
+
+
+def load_current_project() -> dict:
+    project = PROJECT_STORAGE.load()
+    legacy_icons = ROOT / "projects" / "icons"
+    protected_icons = PROJECT_STORAGE.icons(project["projectId"])
+    if legacy_icons.is_dir() and not protected_icons.exists():
+        shutil.copytree(legacy_icons, protected_icons)
+    return project
 
 
 def selected_directory(value: object, label: str) -> Path:
@@ -281,9 +304,13 @@ def _export_name(project: dict, version: str) -> str:
 def _make_versioned_zip(export_root: Path, package_dir: Path) -> Path:
     zip_base = export_root / package_dir.name
     zip_path = Path(str(zip_base) + ".zip")
-    if zip_path.exists():
-        zip_path.unlink()
-    shutil.make_archive(str(zip_base), "zip", package_dir)
+    temporary_base = export_root.parent / f".hfs-zip-{os.getpid()}-{time.time_ns()}"
+    temporary_zip = Path(str(temporary_base) + ".zip")
+    try:
+        shutil.make_archive(str(temporary_base), "zip", package_dir)
+        os.replace(temporary_zip, zip_path)
+    finally:
+        temporary_zip.unlink(missing_ok=True)
     return zip_path
 
 
@@ -295,12 +322,14 @@ def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
         raise ValueError("Export validation failed:\n" + "\n".join(reference_errors))
     version = re.sub(r"[^A-Za-z0-9_.-]", "_", project.get("exportVersion", "v077_editor_export"))
     folder_name = _export_name(project, version)
-    package_dir = export_root / folder_name
+    final_package = export_root / folder_name
+    export_root.parent.mkdir(parents=True, exist_ok=True)
+    staging_context = CleanupDirectory(export_root.parent, ".hfs-export-")
+    package_dir = Path(staging_context.name) / folder_name
     target = package_dir / folder_name
-    if package_dir.exists():
-        shutil.rmtree(package_dir)
     package_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(SOURCE_MOD, target)
+    source_mod = require_base_source(PROJECT_STORAGE, project)
+    shutil.copytree(source_mod, target)
     descriptor = (target / "descriptor.mod").read_text(encoding="utf-8-sig")
     descriptor = re.sub(r'(?m)^\s*version\s*=\s*"[^"]+"', f'version="{version}"', descriptor, count=1)
     display_name = project.get('modDisplayName', 'Norway Remade')
@@ -587,7 +616,7 @@ def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
     (loc_dir / "NHO_editor_l_english.yml").write_text("\n".join(loc) + "\n", encoding="utf-8-sig")
 
     # Copy project assets first, then resolve ownership from actual staged files.
-    custom_icons = ROOT / "projects" / "icons"
+    custom_icons = PROJECT_STORAGE.icons(project["projectId"])
     goal_dir = target / "gfx" / "interface" / "goals"
     goal_dir.mkdir(parents=True, exist_ok=True)
     interface_dir = target / "interface"
@@ -608,7 +637,17 @@ def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
         for action in focus.get("diplomacy", []):
             action.pop("_eventId", None)
     (target / "hoi4_focus_studio_project.json").write_text(json.dumps(public_project(project), ensure_ascii=False, indent=2), encoding="utf-8")
-    return package_dir
+    validate_exported_mod(target)
+    export_root.mkdir(parents=True, exist_ok=True)
+    previous = export_root / f".previous-{folder_name}-{time.time_ns()}"
+    if final_package.exists(): os.replace(final_package, previous)
+    try: os.replace(package_dir, final_package)
+    except Exception:
+        if previous.exists(): os.replace(previous, final_package)
+        raise
+    if previous.exists(): shutil.rmtree(previous)
+    staging_context.cleanup()
+    return final_package
 
 
 def _sprite_records(mod_dir: Path) -> list[dict]:
@@ -722,7 +761,7 @@ def install_test_build(project: dict) -> Path:
         descriptor = re.sub(r'(?m)^\s*version\s*=\s*"[^"]+"', f'version="{version}"', descriptor, count=1)
         staged_descriptor.write_text(descriptor, encoding="utf-8")
         validate_exported_mod(staged_destination)
-        backup_root = ROOT / "backups"; backup_root.mkdir(exist_ok=True)
+        backup_root = PROJECT_STORAGE.backups(project["projectId"]); backup_root.mkdir(parents=True, exist_ok=True)
         if destination.exists():
             stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             shutil.make_archive(str(backup_root/f"{folder_name}_{stamp}"), "zip", destination)
@@ -786,7 +825,7 @@ def _sprite_icon_map(text_files: dict[str, str]) -> dict[str, str]:
 def restore_focus_icons(project: dict, binary_files: dict[str, str], text_files: dict[str, str] | None = None) -> tuple[int, int, int]:
     """Restore imported focus images and attach previews using sprite definitions when available."""
     text_files = text_files or {}
-    icon_dir = ROOT / "projects" / "icons"
+    icon_dir = PROJECT_STORAGE.icons(project["projectId"])
     icon_dir.mkdir(parents=True, exist_ok=True)
     sprite_map = _sprite_icon_map(text_files)
     by_path = {}
@@ -854,12 +893,10 @@ def restore_focus_icons(project: dict, binary_files: dict[str, str], text_files:
     return discovered, decoded, attached
 
 
-def import_mod_files(files: dict[str, str], binary_files: dict[str, str] | None = None) -> tuple[dict, str]:
+def import_mod_files(files: dict[str, str], binary_files: dict[str, str] | None = None, current_project: dict | None = None) -> tuple[dict, str]:
     """Import either a lossless Studio sidecar or an older scripted mod tree."""
     binary_files = binary_files or {}
-    current = json.loads(PROJECT_FILE.read_text(encoding="utf-8"))
-    backup = PROJECT_FILE.parent / f"import_backup_{int(time.time())}.json"
-    shutil.copy2(PROJECT_FILE, backup)
+    current = current_project or load_current_project()
     for name, content in files.items():
         if name.replace("\\", "/").lower().endswith("hoi4_focus_studio_project.json"):
             imported = json.loads(content)
@@ -869,8 +906,8 @@ def import_mod_files(files: dict[str, str], binary_files: dict[str, str] | None 
             imported.setdefault("events", [])
             imported.setdefault("decisions", [])
             imported.setdefault("characters", [])
+            imported["projectId"] = current["projectId"]
             discovered, decoded, attached = restore_focus_icons(imported, binary_files, files)
-            PROJECT_FILE.write_text(json.dumps(imported, ensure_ascii=False, indent=2), encoding="utf-8")
             note = f" Found {discovered} image files, decoded {decoded}, and attached {attached} focus pictures."
             return imported, "Lossless Studio project data was found and restored." + note
 
@@ -896,9 +933,8 @@ def import_mod_files(files: dict[str, str], binary_files: dict[str, str] | None 
     focuses = recovery.recover_focuses(import_root, loc)
     events = recovery.recover_events(import_root, loc, focuses)
     recovery.validate(focuses)
-    imported = {"title": current.get("title", "New HOI4 Project"), "exportVersion": current.get("exportVersion", "v077_editor_export"), "eventNamespace": "NHO_editor", "focuses": focuses, "events": events, "decisions": [], "characters": [], "nationalSpirits": [], "stateCatalog": current.get("stateCatalog", [])}
+    imported = {"projectId": current["projectId"], "title": current.get("title", "New HOI4 Project"), "exportVersion": current.get("exportVersion", "v077_editor_export"), "eventNamespace": "NHO_editor", "focuses": focuses, "events": events, "decisions": [], "characters": [], "nationalSpirits": [], "stateCatalog": current.get("stateCatalog", [])}
     discovered, decoded, attached = restore_focus_icons(imported, binary_files, normalized)
-    PROJECT_FILE.write_text(json.dumps(imported, ensure_ascii=False, indent=2), encoding="utf-8")
     note = f" Found {discovered} image files, decoded {decoded}, and attached {attached} focus pictures."
     return imported, "Older mod detected: focus scripts and localisation were reconstructed." + note
 
@@ -1011,8 +1047,15 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_json(check_for_updates())
             return
         if request_path == "/api/project":
-            project, _ = migrate_project(json.loads(PROJECT_FILE.read_text(encoding="utf-8")))
-            self.send_json(project)
+            self.send_json(load_current_project())
+            return
+        if request_path == "/api/base-source/status":
+            project = load_current_project()
+            try:
+                source = require_base_source(PROJECT_STORAGE, project)
+                self.send_json({"ok": True, "available": True, "projectId": project["projectId"], "files": sum(1 for p in source.rglob("*") if p.is_file())})
+            except BaseSourceRequired as exc:
+                self.send_json({"ok": True, "available": False, "projectId": project["projectId"], "message": str(exc)})
             return
         if request_path == "/api/sources":
             self.send_json({"sources": SOURCE_CATALOG.sources() if SOURCE_CATALOG.path.exists() else []})
@@ -1029,26 +1072,18 @@ class Handler(SimpleHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", 0))
         try:
             data = json.loads(self.rfile.read(length))
+            if request_path in {"/api/project", "/api/export", "/api/install"}:
+                data["projectId"] = load_current_project()["projectId"]
             if request_path == "/api/project":
                 data, _ = migrate_project(data)
-                PROJECT_FILE.parent.mkdir(parents=True, exist_ok=True)
-                autosaves = PROJECT_FILE.parent / "autosaves"
-                autosaves.mkdir(parents=True, exist_ok=True)
-                if PROJECT_FILE.exists():
-                    stamp = int(time.time() // 300) * 300
-                    backup = autosaves / f"project_{stamp}.json"
-                    if not backup.exists():
-                        shutil.copy2(PROJECT_FILE, backup)
-                    old_backups = sorted(autosaves.glob("project_*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
-                    for stale in old_backups[12:]:
-                        stale.unlink(missing_ok=True)
-                PROJECT_FILE.write_text(json.dumps(public_project(data), ensure_ascii=False, indent=2), encoding="utf-8")
+                PROJECT_STORAGE.save(public_project(data))
                 self.send_json({"ok": True})
             elif request_path == "/api/icon":
                 name = re.sub(r"[^A-Za-z0-9_-]", "_", data.get("name", "custom_focus"))
                 raw = base64.b64decode(data["png"].split(",", 1)[1])
                 image = Image.open(BytesIO(raw)).convert("RGBA").resize((95, 85), Image.Resampling.LANCZOS)
-                out = ROOT / "projects" / "icons"
+                project = load_current_project()
+                out = PROJECT_STORAGE.icons(project["projectId"])
                 out.mkdir(parents=True, exist_ok=True)
                 image.save(out / f"{name}.png")
                 image.save(out / f"{name}.dds")
@@ -1061,7 +1096,7 @@ class Handler(SimpleHTTPRequestHandler):
                 data["exportVersion"] = export_version
                 exported = export_project(data, export_root)
                 zip_path = _make_versioned_zip(export_root, exported)
-                PROJECT_FILE.write_text(json.dumps(public_project(data), ensure_ascii=False, indent=2), encoding="utf-8")
+                PROJECT_STORAGE.save(public_project(data))
                 opened = False
                 if data.get("openExportFolder", True):
                     try:
@@ -1083,6 +1118,18 @@ class Handler(SimpleHTTPRequestHandler):
                 chosen = filedialog.askdirectory(title=str(data.get("title", "Choose folder")), mustexist=False)
                 window.destroy()
                 self.send_json({"ok": True, "path": chosen})
+            elif request_path in {"/api/base-source/select-folder", "/api/base-source/select-zip"}:
+                import tkinter as tk
+                from tkinter import filedialog
+                window = tk.Tk(); window.withdraw(); window.attributes("-topmost", True)
+                if request_path.endswith("select-zip"):
+                    chosen = filedialog.askopenfilename(title="Choose complete old mod ZIP", filetypes=[("ZIP archive", "*.zip")])
+                else:
+                    chosen = filedialog.askdirectory(title="Choose complete old mod folder", mustexist=True)
+                window.destroy(); self.send_json({"ok": True, "path": chosen})
+            elif request_path == "/api/base-source/recover":
+                project = load_current_project()
+                self.send_json(recover_base_source(PROJECT_STORAGE, project["projectId"], Path(str(data.get("path", "")))))
             elif request_path == "/api/update/download":
                 self.send_json(download_update())
             elif request_path == "/api/update/select-zip":
@@ -1109,10 +1156,13 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json({"ok": True, "message": "Update verified. Studio will close, replace program files, and reopen."})
                 threading.Timer(0.5, self.server.shutdown).start()
             elif request_path == "/api/import-mod":
-                imported, mode = import_mod_files(data.get("files", {}), data.get("binaryFiles", {}))
+                imported, mode = import_mod_files(data.get("files", {}), data.get("binaryFiles", {}), load_current_project())
+                PROJECT_STORAGE.save(public_project(imported))
                 self.send_json({"ok": True, "project": imported, "mode": mode})
             else:
                 self.send_json({"error": "Unknown endpoint"}, 404)
+        except BaseSourceRequired as exc:
+            self.send_json({"error": str(exc), "code": exc.code, "recoveryRequired": True}, 409)
         except Exception as exc:
             self.send_json({"error": str(exc)}, 500)
 

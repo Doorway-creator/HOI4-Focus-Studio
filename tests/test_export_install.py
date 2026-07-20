@@ -2,10 +2,13 @@ import json
 import tempfile
 import unittest
 import zipfile
+import shutil
+import uuid
 from pathlib import Path
 from unittest.mock import patch
 
 import server
+from project_storage import ProjectStorage
 
 
 class ExportInstallTests(unittest.TestCase):
@@ -18,7 +21,10 @@ class ExportInstallTests(unittest.TestCase):
         (self.source / "common" / "national_focus" / "norway.txt").write_text(
             "focus_tree = {\nid = test\nfocus = { id = placeholder }\n}\n", encoding="utf-8"
         )
-        self.patches = [patch("server.ROOT", self.root), patch("server.SOURCE_MOD", self.source), patch("server.UPDATE_ROOT", self.root / "updates")]
+        self.project_id = str(uuid.uuid4())
+        self.storage = ProjectStorage(self.root / "local-data")
+        shutil.copytree(self.source, self.storage.base_mod(self.project_id))
+        self.patches = [patch("server.ROOT", self.root), patch("server.PROJECT_STORAGE", self.storage), patch("server.UPDATE_ROOT", self.root / "updates")]
         for item in self.patches:
             item.start()
 
@@ -28,7 +34,7 @@ class ExportInstallTests(unittest.TestCase):
         self.workspace.cleanup()
 
     def project(self):
-        return {"exportFolder": "Test_Mod", "exportVersion": "v1_2", "versionBump": "keep", "focuses": [], "events": [], "decisions": [], "characters": [], "nationalSpirits": []}
+        return {"projectId": self.project_id, "exportFolder": "Test_Mod", "exportVersion": "v1_2", "versionBump": "keep", "focuses": [], "events": [], "decisions": [], "characters": [], "nationalSpirits": []}
 
     def test_export_names_folder_descriptor_and_zip_match(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -54,7 +60,7 @@ class ExportInstallTests(unittest.TestCase):
         self.assertNotIn("hoi4ModFolder", sidecar)
 
     def test_generated_sprite_paths_point_to_copied_dds_files(self):
-        icon = self.root / "projects" / "icons" / "nested" / "NHO_focus_test.dds"
+        icon = self.storage.icons(self.project_id) / "nested" / "NHO_focus_test.dds"
         icon.parent.mkdir(parents=True)
         icon.write_bytes(b"dds fixture")
         project = self.project()
@@ -71,7 +77,7 @@ class ExportInstallTests(unittest.TestCase):
     def test_vanilla_looking_names_are_custom_when_a_project_dds_exists(self):
         for key in ("GFX_focus_NOR_arms_industry", "GFX_focus_generic_shipyard", "GFX_goal_generic_merchant_marine"):
             with self.subTest(key=key), tempfile.TemporaryDirectory() as temp:
-                icon = self.root / "projects" / "icons" / f"{key[4:]}.dds"
+                icon = self.storage.icons(self.project_id) / f"{key[4:]}.dds"
                 icon.parent.mkdir(parents=True, exist_ok=True); icon.write_bytes(b"dds fixture")
                 project = self.project(); project["focuses"] = [{"id": "example", "icon": key, "x": 0, "y": 0}]
                 package = server.export_project(project, Path(temp)); mod = package / package.name
@@ -85,9 +91,10 @@ class ExportInstallTests(unittest.TestCase):
 
     def test_conflicting_custom_sprite_definitions_are_normalized_to_one_real_dds(self):
         key = "GFX_focus_NOR_hovland_mines"
-        interface = self.source / "interface"; interface.mkdir()
+        protected_source = self.storage.base_mod(self.project_id)
+        interface = protected_source / "interface"; interface.mkdir()
         for folder in ("one", "two"):
-            dds = self.source / "gfx" / "interface" / "goals" / folder / "focus_NOR_hovland_mines.dds"
+            dds = protected_source / "gfx" / "interface" / "goals" / folder / "focus_NOR_hovland_mines.dds"
             dds.parent.mkdir(parents=True, exist_ok=True); dds.write_bytes(folder.encode())
         (interface / "first.gfx").write_text(f'spriteTypes = {{ spriteType = {{ name = "{key}" texturefile = "gfx/interface/goals/one/focus_NOR_hovland_mines.dds" }} }}', encoding="utf-8")
         (interface / "second.gfx").write_text(f'spriteTypes = {{ spriteType = {{ name = "{key}" texturefile = "gfx/interface/goals/two/focus_NOR_hovland_mines.dds" }} }}', encoding="utf-8")
@@ -113,6 +120,18 @@ class ExportInstallTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     server.install_test_build(project)
             self.assertEqual(sentinel.read_text(encoding="utf-8"), "safe")
+
+    def test_failed_zip_creation_leaves_no_partial_archive(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); package = server.export_project(self.project(), root)
+            def partial_archive(base, *_args, **_kwargs):
+                Path(str(base) + ".zip").write_bytes(b"partial")
+                raise OSError("simulated packaging failure")
+            with patch("server.shutil.make_archive", side_effect=partial_archive):
+                with self.assertRaisesRegex(OSError, "simulated packaging failure"):
+                    server._make_versioned_zip(root, package)
+            self.assertFalse((root / "Test_Mod_v1_2.zip").exists())
+            self.assertEqual(list(root.parent.glob(".hfs-zip-*.zip")), [])
 
 
 if __name__ == "__main__":

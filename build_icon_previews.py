@@ -1,17 +1,19 @@
 import json, os, re
 from pathlib import Path
 from PIL import Image
+from project_storage import ProjectStorage, default_app_data_root
+from base_source import require_base_source
 
 ROOT = Path(__file__).resolve().parent
 GAME = Path(os.environ.get("HOI4_GAME_PATH", ""))
 if not os.environ.get("HOI4_GAME_PATH"):
     raise SystemExit("Set HOI4_GAME_PATH to your Hearts of Iron IV installation folder.")
-MOD = ROOT / "base_mod" / "Norwegian_Kings_Yes_DLC_Tree_Test"
-PROJECT = ROOT / "projects" / "default_project.json"
+STORAGE = ProjectStorage(default_app_data_root(), ROOT / "projects" / "default_project.json")
+project = STORAGE.load()
+MOD = require_base_source(STORAGE, project)
 OUT = ROOT / "icon-previews"
 OUT.mkdir(exist_ok=True)
 
-project = json.loads(PROJECT.read_text(encoding="utf-8"))
 wanted = {f.get("icon", "") for f in project["focuses"]}
 mappings = {}
 
@@ -48,5 +50,5 @@ for focus in project["focuses"]:
     except Exception as exc:
         print(f"Could not convert {source}: {exc}")
 
-PROJECT.write_text(json.dumps(project, ensure_ascii=False, indent=2), encoding="utf-8")
+STORAGE.save(project)
 print(f"Created {made} icon previews from {len(wanted)} focus icon keys")

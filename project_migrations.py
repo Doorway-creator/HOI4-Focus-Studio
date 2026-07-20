@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import copy
+import uuid
 
-CURRENT_SCHEMA = 3
+CURRENT_SCHEMA = 4
 
 
 def migrate_project(project: dict) -> tuple[dict, bool]:
     migrated = copy.deepcopy(project); changed = False
+    if "projectId" not in migrated:
+        migrated["projectId"] = str(uuid.uuid4()); changed = True
     defaults = {"dependencies": [], "references": [], "overrides": [], "designReferences": []}
     for key, value in defaults.items():
         if key not in migrated: migrated[key] = copy.deepcopy(value); changed = True

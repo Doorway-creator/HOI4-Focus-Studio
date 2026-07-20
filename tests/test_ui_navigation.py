@@ -32,6 +32,13 @@ class SourceNavigationTests(unittest.TestCase):
         self.assertIn("$('#unlockPanel')?.scrollIntoView", self.script)
         self.assertIn("$('#unlockSearch')?.focus", self.script)
 
+    def test_missing_base_source_recovery_controls_are_reachable(self):
+        for identifier in ("baseRecoveryDialog", "recoverBaseFolder", "recoverBaseZip", "baseRecoveryStatus"):
+            self.assertIn(f'id="{identifier}"', self.html)
+        self.assertIn("/api/base-source/status", self.script)
+        self.assertIn("/api/base-source/recover", self.script)
+        self.assertIn("recoveryRequired", self.script)
+
 
 if __name__ == "__main__":
     unittest.main()

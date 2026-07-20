@@ -1,11 +1,14 @@
 import tempfile
 import unittest
+import shutil
+import uuid
 from pathlib import Path
 from unittest.mock import patch
 
 import server
 from project_content import character_action_script, character_from_import, spirit_action_script, spirit_from_import
 from project_migrations import CURRENT_SCHEMA, migrate_project
+from project_storage import ProjectStorage
 
 
 def entity(kind="character"):
@@ -67,8 +70,9 @@ class CompatibilityAndExportTests(unittest.TestCase):
             root = Path(folder); base = root / "base"; (base / "common" / "national_focus").mkdir(parents=True)
             (base / "descriptor.mod").write_text('name="Test"\nversion="1"', encoding="utf-8")
             (base / "common" / "national_focus" / "norway.txt").write_text('focus_tree = { id = test focus = { id = placeholder completion_reward = { } } }', encoding="utf-8")
-            project = {"exportFolder": "Phase2", "exportVersion": "v1", "focuses": [{"id": "focus", "icon": "GFX_goal_generic", "x": 0, "y": 0, "characterActions": [{"action": "recruit", "characterId": "owned"}], "spiritActions": [{"action": "add", "spiritId": "owned_idea"}]}], "events": [], "decisions": [], "dependencies": [], "references": [{"type": "character", "targetId": "dependency_only"}], "characters": [{"id": "owned", "name": "Owned", "role": "General", "ownership": "clone", "preservedSourceScript": "custom_character_data = yes"}], "nationalSpirits": [{"id": "owned_idea", "name": "Owned Idea", "ownership": "clone", "modifiers": "stability_factor = 0.1", "preservedSourceScript": "custom_idea_data = yes"}]}
-            with patch("server.ROOT", root), patch("server.SOURCE_MOD", base), patch("server.catalog_lookup", return_value=[]):
+            project_id = str(uuid.uuid4()); storage = ProjectStorage(root / "local-data"); shutil.copytree(base, storage.base_mod(project_id))
+            project = {"projectId": project_id, "exportFolder": "Phase2", "exportVersion": "v1", "focuses": [{"id": "focus", "icon": "GFX_goal_generic", "x": 0, "y": 0, "characterActions": [{"action": "recruit", "characterId": "owned"}], "spiritActions": [{"action": "add", "spiritId": "owned_idea"}]}], "events": [], "decisions": [], "dependencies": [], "references": [{"type": "character", "targetId": "dependency_only"}], "characters": [{"id": "owned", "name": "Owned", "role": "General", "ownership": "clone", "preservedSourceScript": "custom_character_data = yes"}], "nationalSpirits": [{"id": "owned_idea", "name": "Owned Idea", "ownership": "clone", "modifiers": "stability_factor = 0.1", "preservedSourceScript": "custom_idea_data = yes"}]}
+            with patch("server.ROOT", root), patch("server.PROJECT_STORAGE", storage), patch("server.catalog_lookup", return_value=[]):
                 package = server.export_project(project, root / "exports"); mod = package / package.name
             character_text = (mod / "common" / "characters" / "NHO_editor_characters.txt").read_text(encoding="utf-8")
             idea_text = (mod / "common" / "ideas" / "NHO_editor_national_spirits.txt").read_text(encoding="utf-8")

@@ -27,7 +27,7 @@
     <label>Connection type<select id="linkType"><option value="prerequisite">Prerequisite</option><option value="visual">Visual only</option><option value="mutual">Mutually exclusive</option></select></label>
     <button id="startLink">Connect selected…</button><button id="deleteFocus" class="danger">Delete selected</button>
     <hr><label>Zoom<input id="zoom" type="range" min="45" max="125" value="75"></label>
-    <p class="hint">Drag focuses to move them. Select one, choose a connection type, press Connect, then click the destination.</p>
+    <p class="hint">Drag focuses to move them. Shift-drag empty space selects a group; Ctrl-click toggles focuses; right-drag pans. Select one, choose a connection type, press Connect, then click the destination.</p>
     <details open><summary>Export versioning</summary>
       <label>Current released version<input id="exportVersion" value="v0_80" placeholder="v0_80"></label>
       <label>Next export type<select id="versionBump"><option value="minor">New version (v0_80 → v0_81)</option><option value="hotfix">Small fix (v0_80 → v0_80_1)</option><option value="keep">Keep exact version</option></select></label>
@@ -39,7 +39,7 @@
     </details>
     <details><summary>Export and test instructions</summary><p class="hint">Choose an export destination and your Hearts of Iron IV mod folder above. Install Test Build validates a staged mod before replacing the installed test copy.</p></details>
   </aside>
-  <section id="viewport"><div id="world"><svg id="edges"></svg><div id="nodes"></div></div></section>
+  <section id="viewport"><div id="selectionBox" hidden></div><div id="world"><svg id="edges"></svg><div id="nodes"></div></div></section>
   <aside id="focusEditor" class="editor"><h2>Focus</h2><p>Select a focus.</p></aside>
 </main>
 
@@ -122,6 +122,13 @@
   <div class="province-picker-foot"><strong id="provinceHover">Move over a province</strong><span id="provinceSelection" class="hint">Build a queue, then add all selected rewards.</span></div>
 </dialog>
 <dialog id="message"><p></p><button>OK</button></dialog>
+<dialog id="baseRecoveryDialog" class="update-dialog">
+  <h2>Recover project base source</h2>
+  <p id="baseRecoveryMessage">This project needs its complete old mod source before it can export or install.</p>
+  <p class="hint">The selected source is validated and copied into protected local storage under this project’s internal ID. Its old name and location will not be retained or required.</p>
+  <p id="baseRecoveryStatus" class="hint"></p>
+  <div class="update-actions"><button id="closeBaseRecovery">Not now</button><button id="recoverBaseFolder">Choose old mod folder…</button><button id="recoverBaseZip" class="primary">Choose old mod ZIP…</button></div>
+</dialog>
 <dialog id="updateDialog" class="update-dialog">
   <h2>HOI4 Focus Studio updates</h2>
   <p id="updateVersions">Installed version: checking…</p>
@@ -130,6 +137,7 @@
   <div class="update-actions"><button id="closeUpdates">Close</button><button id="manualUpdate">Install update from ZIP…</button><button id="downloadUpdate" disabled>Download update</button><button id="installUpdate" class="primary" disabled>Install update</button></div>
 </dialog>
 <div id="contextMenu" class="context-menu" hidden></div>
+<script src="focus_tree_interactions.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

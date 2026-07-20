@@ -34,6 +34,12 @@ class UpdaterTests(unittest.TestCase):
         for protected in ("projects", "exports", "backups", "imports", "updates"):
             self.assertIn(f"'{protected}'", helper)
 
+    def test_project_storage_is_outside_program_update_root(self):
+        source = (Path(__file__).resolve().parents[1] / "project_storage.py").read_text(encoding="utf-8")
+        self.assertIn('"LOCALAPPDATA"', source)
+        self.assertIn('"HOI4 Focus Studio"', source)
+        self.assertNotIn("InstallRoot", source)
+
     def test_release_check_sends_no_project_or_personal_data(self):
         response = b'{"tag_name":"v6.11.1","body":"notes","html_url":"https://github.com/release","assets":[]}'
         with patch("server._release_request", return_value=response) as request:

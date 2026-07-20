@@ -27,6 +27,7 @@ jobs:
           pyinstaller --noconfirm --clean --onedir --name "HOI4 Focus Studio" `
             --add-data "index.html;." `
             --add-data "app.js;." `
+            --add-data "focus_tree_interactions.js;." `
             --add-data "style.css;." `
             --add-data "data;data" `
             --add-data "icon-previews;icon-previews" `
