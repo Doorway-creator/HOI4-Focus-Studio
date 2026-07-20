@@ -92,3 +92,19 @@ def identifiers(value) -> set[str]:
     elif isinstance(value, str) and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.:-]*", value):
         found.add(value)
     return found
+
+
+def serialize(value, indent: int = 0) -> str:
+    if not isinstance(value, Block):
+        text = str(value)
+        return f'"{text}"' if any(char.isspace() for char in text) else text
+    lines = []
+    pad = "\t" * indent
+    for entry in value.entries:
+        if isinstance(entry.value, Block):
+            lines.append(f"{pad}{entry.key} = {{")
+            lines.append(serialize(entry.value, indent + 1))
+            lines.append(f"{pad}}}")
+        else:
+            lines.append(f"{pad}{entry.key} = {serialize(entry.value)}")
+    return "\n".join(lines)

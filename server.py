@@ -27,6 +27,8 @@ from export_validation import validate_references
 from project_migrations import migrate_project
 from source_catalog import SourceCatalog
 from source_importer import import_sources
+from project_content import character_action_script, spirit_action_script
+from clausewitz_parser import Block, parse as parse_clausewitz, serialize as serialize_clausewitz
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_FILE = ROOT / "projects" / "default_project.json"
@@ -59,6 +61,15 @@ def catalog_lookup(kind: str, target: str) -> list[dict]:
     mapped = {"aircraft_module": "module", "tank_module": "module", "ship_module": "module", "research_bonus": "technology", "ahead_of_time": "technology", "category_bonus": "technology_category"}.get(kind, kind)
     if not SOURCE_CATALOG.path.exists(): return []
     return [row for row in SOURCE_CATALOG.search(mapped, target, 200) if row["entity_id"] == target]
+
+
+def preserved_unknown_script(raw: str, normalized_keys: set[str]) -> str:
+    if not str(raw).strip(): return ""
+    try:
+        document = parse_clausewitz(str(raw))
+        return serialize_clausewitz(Block([entry for entry in document.entries if entry.key not in normalized_keys]))
+    except ValueError:
+        return str(raw)
 
 
 def matching_brace(text: str, opening: int) -> int:
@@ -218,6 +229,8 @@ def render_focus(focus: dict, events: list[dict], decisions: list[dict], charact
     generated = generated_effect_scripts(focus) + diplomacy_focus_scripts(focus)
     generated.extend(f"add_ideas = {sp['id']}" for sp in national_spirits if sp.get("grantedByFocus") == focus["id"])
     generated.extend(f"remove_ideas = {sp['id']}" for sp in national_spirits if sp.get("removedByFocus") == focus["id"])
+    generated.extend(filter(None, (character_action_script(action) for action in focus.get("characterActions", []))))
+    for action in focus.get("spiritActions", []): generated.extend(spirit_action_script(action))
     linked_decisions = [decision for decision in decisions if decision.get("linkedFocus") == focus["id"]]
     linked_characters = [character for character in characters if character.get("linkedFocus") == focus["id"]]
     if linked or generated or linked_decisions or linked_characters:
@@ -323,8 +336,12 @@ def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
             f"\tdesc = {event.get('descKey', event['id'] + '.d')}", f"\tpicture = {event.get('picture', 'GFX_report_event_generic_read_write')}",
             "\tis_triggered_only = yes", f"\ttrigger = {{ {event.get('trigger', 'always = yes')} }}",
         ])
-        for option in event.get("options", []):
+        event_actions = [character_action_script(action) for action in event.get("characterActions", [])]
+        for action in event.get("spiritActions", []): event_actions.extend(spirit_action_script(action))
+        for option_index, option in enumerate(event.get("options", [])):
             event_lines.extend(["\toption = {", f"\t\tname = {option.get('nameKey', event['id'] + '.a')}", f"\t\t{option.get('effect', 'add_political_power = 10')}", "\t}"])
+            if option_index == 0 and event_actions:
+                event_lines[-1:-1] = ["\t\t" + line for line in event_actions if line]
         event_lines.extend(["}", ""])
     (events_dir / "NHO_editor_events.txt").write_text("\n".join(event_lines), encoding="utf-8")
 
@@ -401,7 +418,7 @@ def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
         if has_permanent_ideas:
             permanent_ideas.extend(["\t}", "}"]); ideas_dir = target / "common" / "ideas"; ideas_dir.mkdir(parents=True, exist_ok=True); (ideas_dir / "NHO_editor_decision_ideas.txt").write_text("\n".join(permanent_ideas) + "\n", encoding="utf-8")
 
-    characters = project.get("characters", [])
+    characters = [item for item in project.get("characters", []) if item.get("ownership") != "reference"]
     if characters:
         char_dir = target / "common" / "characters"; char_dir.mkdir(parents=True, exist_ok=True); portrait_dir = target / "gfx" / "leaders" / "NHO_editor"; portrait_dir.mkdir(parents=True, exist_ok=True); lines = ["characters = {"]
         for character in characters:
@@ -410,18 +427,26 @@ def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
                 image = Image.open(BytesIO(base64.b64decode(data_url.split(",", 1)[1]))).convert("RGBA"); image.thumbnail((156, 210), Image.Resampling.LANCZOS); canvas = Image.new("RGBA", (156, 210), (0, 0, 0, 0)); canvas.alpha_composite(image, ((156-image.width)//2, (210-image.height)//2)); canvas.save(target / portrait)
             lines.extend([f"\t{cid} = {{", f'\t\tname = "{character.get("name", cid).replace(chr(34), chr(39))}"']); portrait_kind = "navy" if role in ("Admiral", "Captain") else "army"
             if data_url: lines.append(f'\t\tportraits = {{ {portrait_kind} = {{ large = "{portrait}" }} }}')
-            availability = str(character.get("availability", "")).strip()
-            if availability: lines.extend(["\t\tallowed = {", *["\t\t\t" + line for line in availability.splitlines()], "\t\t}"])
+            allowed = str(character.get("allowedConditions", character.get("availability", ""))).strip()
+            visible = str(character.get("visibleConditions", "")).strip()
+            if allowed: lines.extend(["\t\tallowed = {", *["\t\t\t" + line for line in allowed.splitlines()], "\t\t}"])
+            if visible: lines.extend(["\t\tvisible = {", *["\t\t\t" + line for line in visible.splitlines()], "\t\t}"])
             traits = " ".join(re.findall(r"[A-Za-z0-9_]+", str(character.get("traits", ""))))
             trait_script = f" traits = {{ {traits} }}" if traits else ""
-            if role in ("Admiral", "Captain"): lines.append(f"\t\tnavy_leader = {{ skill = {skill} attack_skill = {attack} defense_skill = {defense} maneuvering_skill = {maneuvering} coordination_skill = {coordination}{trait_script} }}")
-            else: lines.append(f"\t\tcorps_commander = {{ skill = {skill} attack_skill = {attack} defense_skill = {defense} planning_skill = {planning} logistics_skill = {logistics}{trait_script} }}")
+            roles = set(character.get("roles", [])) | {role}
+            if roles & {"Admiral", "Captain"}: lines.append(f"\t\tnavy_leader = {{ skill = {skill} attack_skill = {attack} defense_skill = {defense} maneuvering_skill = {maneuvering} coordination_skill = {coordination}{trait_script} }}")
+            if roles & {"General", "Field Officer"}: lines.append(f"\t\tcorps_commander = {{ skill = {skill} attack_skill = {attack} defense_skill = {defense} planning_skill = {planning} logistics_skill = {logistics}{trait_script} }}")
+            for slot in character.get("advisorSlots", []):
+                slot_id = re.sub(r"[^A-Za-z0-9_]", "", str(slot))
+                if slot_id: lines.append(f"\t\tadvisor = {{ slot = {slot_id} cost = {max(0, int(character.get('cost', 0) or 0))} ai_will_do = {{ {character.get('aiWillDo') or 'factor = 1'} }} }}")
             raw_script = str(character.get("rawScript", "")).strip()
+            preserved = preserved_unknown_script(character.get("preservedSourceScript", character.get("sourceRaw", "")), {"name", "portraits", "allowed", "visible", "corps_commander", "field_marshal", "navy_leader", "advisor", "country_leader", "cost", "ai_will_do"})
+            if preserved: lines.extend("\t\t" + line for line in preserved.splitlines())
             if raw_script: lines.extend("\t\t" + line for line in raw_script.splitlines())
             lines.append("\t}")
         lines.append("}"); (char_dir / "NHO_editor_characters.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    national_spirits = project.get("nationalSpirits", [])
+    national_spirits = [item for item in project.get("nationalSpirits", []) if item.get("ownership") != "reference"]
     if national_spirits:
         ideas_dir = target / "common" / "ideas"
         ideas_dir.mkdir(parents=True, exist_ok=True)
@@ -433,14 +458,25 @@ def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
         sprite_lines = ["spriteTypes = {"]
         for spirit in national_spirits:
             sid = re.sub(r"[^A-Za-z0-9_]", "_", spirit.get("id", "NHO_idea"))
-            icon_key = spirit.get("icon") or f"GFX_{sid}"
-            idea_lines.extend([f"\t\t{sid} = {{", "\t\t\tallowed = { always = yes }", "\t\t\tremoval_cost = -1", f"\t\t\tpicture = {icon_key}"])
+            icon_key = spirit.get("picture") or spirit.get("icon") or f"GFX_{sid}"
+            allowed = str(spirit.get("allowedConditions", "always = yes")).strip() or "always = yes"
+            visible = str(spirit.get("visibleConditions", "")).strip()
+            idea_lines.extend([f"\t\t{sid} = {{", "\t\t\tallowed = { " + allowed + " }", f"\t\t\tremoval_cost = {int(spirit.get('removalCost', -1) or 0)}", f"\t\t\tpicture = {icon_key}"])
+            if visible: idea_lines.append("\t\t\tvisible = { " + visible + " }")
             modifiers = str(spirit.get("modifiers", "")).strip()
             if modifiers:
                 idea_lines.append("\t\t\tmodifier = {")
                 idea_lines.extend("\t\t\t\t" + line.strip() for line in modifiers.splitlines() if line.strip())
                 idea_lines.append("\t\t\t}")
+            for field, block_name in (("targetedModifiers", "targeted_modifier"), ("equipmentBonuses", "equipment_bonus"), ("researchBonuses", "research_bonus")):
+                content = str(spirit.get(field, "")).strip()
+                if content:
+                    idea_lines.append(f"\t\t\t{block_name} = {{")
+                    idea_lines.extend("\t\t\t\t" + line.strip() for line in content.splitlines() if line.strip())
+                    idea_lines.append("\t\t\t}")
             raw_extra = str(spirit.get("raw", "")).strip()
+            preserved = preserved_unknown_script(spirit.get("preservedSourceScript", spirit.get("sourceRaw", "")), {"picture", "allowed", "visible", "removal_cost", "modifier", "targeted_modifier", "equipment_bonus", "research_bonus"})
+            if preserved: idea_lines.extend("\t\t\t" + line for line in preserved.splitlines())
             if raw_extra:
                 idea_lines.extend("\t\t\t" + line for line in raw_extra.splitlines())
             idea_lines.append("\t\t}")
@@ -541,7 +577,7 @@ def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
             loc.append(f' {idea}_desc:0 "A permanent national modifier granted by this decision."')
     for character in project.get("characters", []):
         cid = re.sub(r"[^A-Za-z0-9_]", "_", character["id"])
-        loc.append(f' {cid}:0 \"{character.get("name", cid).replace(chr(34), chr(39))}\"')
+        loc.append(f' {cid}:0 \"{character.get("localisation", character.get("name", cid)).replace(chr(34), chr(39))}\"')
         if str(character.get("description", "")).strip(): loc.append(f' {cid}_desc:0 \"{str(character.get("description", "")).replace(chr(34), chr(39)).replace(chr(10), " ")}\"')
     for spirit in project.get("nationalSpirits", []):
         sid = re.sub(r"[^A-Za-z0-9_]", "_", spirit.get("id", "NHO_idea"))

@@ -25,4 +25,24 @@ def validate_references(project: dict, lookup) -> list[str]:
         missing = set(design.get("requiredSources", [])) - enabled
         if missing: errors.append(f"Design {design.get('targetId')}: missing dependencies {', '.join(sorted(missing))}")
         if design.get("unresolvedModules"): errors.append(f"Design {design.get('targetId')}: unresolved modules {', '.join(design['unresolvedModules'])}")
+    for collection, kind in ((project.get("characters", []), "character"), (project.get("nationalSpirits", []), "idea")):
+        seen = set()
+        for item in collection:
+            item_id = item.get("id", "")
+            if item_id in seen: errors.append(f"Duplicate project-owned {kind} ID: {item_id}")
+            seen.add(item_id)
+            missing = set(item.get("dependencyRequirements", [])) - enabled
+            if missing: errors.append(f"{item_id}: missing dependency sources: {', '.join(sorted(missing))}")
+    known_characters = {item.get("id") for item in project.get("characters", [])}
+    known_spirits = {item.get("id") for item in project.get("nationalSpirits", [])}
+    for owner in [*project.get("focuses", []), *project.get("events", [])]:
+        label = owner.get("id", "content")
+        for action in owner.get("characterActions", []):
+            target = action.get("characterId", "")
+            if target not in known_characters and not lookup("character", target): errors.append(f"{label}: unresolved character action reference {target}")
+        for action in owner.get("spiritActions", []):
+            target = action.get("spiritId", "")
+            if target not in known_spirits and not lookup("idea", target): errors.append(f"{label}: unresolved spirit action reference {target}")
+            replacement = action.get("replacementId")
+            if replacement and replacement not in known_spirits: errors.append(f"{label}: unresolved project spirit replacement {replacement}")
     return errors

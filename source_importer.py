@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import re
 
-from clausewitz_parser import Block, identifiers, parse
+from clausewitz_parser import Block, identifiers, parse, serialize
 from source_archives import RarArchive, TEXT_SUFFIXES, open_archive
 from source_catalog import SourceCatalog
 
@@ -86,6 +86,27 @@ def classify(path: str):
     return None
 
 
+def normalized_entity(kind: str, value: Block, refs: list[str]) -> dict:
+    result = {"references": refs, "category": kind}
+    def block_text(key):
+        block = value.first(key)
+        return serialize(block) if isinstance(block, Block) else ""
+    if kind == "character":
+        roles = []
+        for key, label in (("corps_commander", "General"), ("field_marshal", "Field Officer"), ("navy_leader", "Admiral"), ("advisor", "Advisor"), ("country_leader", "Country Leader")):
+            if isinstance(value.first(key), Block): roles.append(label)
+        leader_blocks = [block for key in ("corps_commander", "field_marshal", "navy_leader") for block in value.values(key) if isinstance(block, Block)]
+        traits = sorted({ref for block in leader_blocks for trait_block in block.values("traits") if isinstance(trait_block, Block) for ref in identifiers(trait_block)})
+        advisors = [block for block in value.values("advisor") if isinstance(block, Block)]
+        slots = [str(block.first("slot")) for block in advisors if block.first("slot")]
+        costs = [block.first("cost") for block in advisors if block.first("cost") is not None]
+        ai = next((serialize(block.first("ai_will_do")) for block in advisors if isinstance(block.first("ai_will_do"), Block)), block_text("ai_will_do"))
+        result.update({"roles": roles or ["General"], "traits": traits, "advisorSlots": slots, "allowed": block_text("allowed"), "visible": block_text("visible"), "cost": costs[0] if costs else value.first("cost", 0), "aiWillDo": ai})
+    elif kind == "idea":
+        result.update({"picture": value.first("picture", ""), "removalCost": value.first("removal_cost", -1), "allowed": block_text("allowed"), "visible": block_text("visible"), "modifiers": block_text("modifier"), "targetedModifiers": block_text("targeted_modifier"), "equipmentBonuses": block_text("equipment_bonus"), "researchBonuses": block_text("research_bonus")})
+    return result
+
+
 def import_sources(archive_path: str | Path, catalog_path: Path) -> dict:
     archive_path = Path(archive_path).resolve(); archive = open_archive(archive_path)
     stat = archive_path.stat(); fingerprint = hashlib.sha256(f"{archive_path.name}:{stat.st_size}:{stat.st_mtime_ns}".encode()).hexdigest()
@@ -118,9 +139,9 @@ def import_sources(archive_path: str | Path, catalog_path: Path) -> dict:
                 except ValueError: continue
                 for entry in definition_entries(kind, document):
                     entity_id = str(entry.key); refs = sorted(identifiers(entry.value) - {entity_id})
-                    normalized = {"references": refs, "category": kind}
+                    normalized = normalized_entity(kind, entry.value, refs)
                     requirements = {"sources": [sid] if layer != "vanilla" else [], "coverage": cov.get(kind + "s", {})}
-                    raw = json.dumps(_block_json(entry.value), ensure_ascii=False)
+                    raw = serialize(entry.value)
                     db.execute("INSERT OR IGNORE INTO entities(entity_type,entity_id,display_name,source_id,source_file,source_line,raw_text,normalized,requirements) VALUES(?,?,?,?,?,?,?,?,?)", (kind, entity_id, localisation.get(entity_id, entity_id), sid, rel, entry.line, raw, json.dumps(normalized), json.dumps(requirements)))
                     for ref in refs: db.execute("INSERT INTO edges VALUES(?,?,?,?,?,?)", (kind, entity_id, "references", "unknown", ref, sid))
                     imported += 1
