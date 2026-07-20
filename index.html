@@ -9,7 +9,8 @@
 <body>
 <header>
   <strong>HOI4 Focus Studio</strong>
-  <nav><button data-tab="tree" class="active">Focus tree</button><button data-tab="events">Events</button><button data-tab="decisions">Decisions</button><button data-tab="characters">Characters</button><button data-tab="spirits">National spirits</button><button data-tab="sources">Sources</button><button data-tab="icons">Icon converter</button><button data-tab="import">Import mod</button></nav>
+  <button id="topSources" data-tab="sources" class="source-nav-button">Sources</button>
+  <nav><button data-tab="tree" class="active">Focus tree</button><button data-tab="events">Events</button><button data-tab="decisions">Decisions</button><button data-tab="characters">Characters</button><button data-tab="spirits">National spirits</button><button data-tab="icons">Icon converter</button><button data-tab="import">Import mod</button></nav>
   <label class="map-profile-control">Map profile
     <select id="mapProfile"><option value="vanilla">Vanilla HOI4</option><option value="r56">Road to 56</option></select>
   </label>
@@ -21,6 +22,7 @@
 <main id="treeTab" class="tab active">
   <aside class="tools">
     <button id="addFocus" class="primary">+ New focus</button>
+    <button id="openFocusUnlocks">Unlocks</button>
     <button id="repairFocusIds">Repair temporary focus IDs</button>
     <label>Connection type<select id="linkType"><option value="prerequisite">Prerequisite</option><option value="visual">Visual only</option><option value="mutual">Mutually exclusive</option></select></label>
     <button id="startLink">Connect selected…</button><button id="deleteFocus" class="danger">Delete selected</button>
@@ -55,7 +57,9 @@
   <section class="formpage source-page">
     <h2>Imported game and dependency sources</h2>
     <p class="hint">Sources are indexed locally and remain read-only. Exports contain only current-project definitions, intentional overrides, references, and scripted effects.</p>
-    <div class="source-actions"><button id="chooseSource">Choose ZIP or multipart RAR…</button><button id="importSource" class="primary" disabled>Import selected source</button><span id="sourceImportStatus" class="hint"></span></div>
+    <div class="source-actions"><button id="chooseSource">Choose ZIP or multipart RAR…</button><button id="importSource" class="primary" disabled>Import selected source</button><button id="rebuildCatalog">Re-import / rebuild catalog</button><span id="sourceImportStatus" class="hint"></span></div>
+    <h3>Registered source packages</h3>
+    <div id="sourceWarnings" class="source-warnings"></div>
     <div id="sourceList"></div>
     <div class="catalog-columns">
       <section><h3>Characters</h3><input id="characterCatalogSearch" placeholder="Search character ID or name"><div id="characterCatalog" class="catalog-results"></div></section>
@@ -77,6 +81,7 @@
 <main id="charactersTab" class="tab">
   <aside class="tools character-tools">
     <button id="addCharacter" class="primary">+ New character</button>
+    <button id="browseImportedCharacters">Browse imported characters</button>
     <label>Service tab<select id="characterRoleFilter"><option value="General">Generals</option><option value="Field Officer">Field officers</option><option value="Admiral">Admirals</option><option value="Captain">Captains</option></select></label>
     <div class="character-status-tabs"><button id="showWorking" class="active">Working On</button><button id="showFinished">Finished</button></div>
     <label>Search<input id="characterSearch" placeholder="Name or ID"></label>
@@ -87,7 +92,7 @@
 
 
 <main id="spiritsTab" class="tab">
-  <aside class="tools"><button id="addSpirit" class="primary">+ New national spirit</button><div id="spiritList"></div></aside>
+  <aside class="tools"><button id="addSpirit" class="primary">+ New national spirit</button><button id="browseImportedSpirits">Browse imported spirits</button><div id="spiritList"></div></aside>
   <section class="formpage" id="spiritEditor"><h2>National spirits</h2><p>Create or select a national spirit.</p></section>
 </main>
 

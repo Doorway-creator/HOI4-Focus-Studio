@@ -37,7 +37,7 @@ EXPORT_ROOT = ROOT / "exports"
 APP_VERSION = "6.10.2"
 GITHUB_RELEASES_API = "https://api.github.com/repos/Doorway-creator/HOI4-Focus-Studio/releases/latest"
 UPDATE_ROOT = ROOT / "updates"
-SOURCE_ROOT = ROOT / "sources"
+SOURCE_ROOT = Path(os.environ.get("LOCALAPPDATA", ROOT)) / "HOI4 Focus Studio" / "sources"
 SOURCE_CATALOG = SourceCatalog(SOURCE_ROOT / "catalog.sqlite3")
 LOCAL_PATH_FIELDS = {"exportPath", "hoi4ModFolder"}
 

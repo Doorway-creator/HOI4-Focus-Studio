@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
+import re
 import shutil
 import subprocess
+import tempfile
 import zipfile
 
 
@@ -38,10 +41,34 @@ class ZipArchive(SourceArchive):
 
 class RarArchive(SourceArchive):
     def __init__(self, path: Path, executable: str | None = None):
-        self.path = path.resolve(); self.executable = executable or find_unrar()
-        if not self.executable: raise RuntimeError("Multipart RAR import requires WinRAR/UnRAR or 7-Zip.")
+        self.selected_path = path.resolve(); self.path = normalize_rar_volume(self.selected_path); self.executable = executable or find_unrar()
+        if not self.executable: raise RuntimeError("Multipart RAR import requires WinRAR or UnRAR.")
+        if not self.path.is_file(): raise FileNotFoundError(f"The first multipart volume is missing: {self.path.name}")
+    def _run(self, arguments: list[str], operation: str):
+        result = subprocess.run([self.executable, *arguments], capture_output=True, text=True, encoding="utf-8", errors="replace")
+        if result.returncode:
+            detail = "\n".join(part.strip() for part in (result.stderr, result.stdout) if part.strip())
+            explanation = RAR_EXIT_CODES.get(result.returncode, "Unknown UnRAR failure")
+            raise RuntimeError(f"{operation} failed (UnRAR exit code {result.returncode}: {explanation})." + (f"\n{detail[-4000:]}" if detail else ""))
+        return result
+    def volume_paths(self) -> list[Path]:
+        match = multipart_name(self.path.name)
+        if not match: return [self.path]
+        siblings = {}
+        for candidate in self.path.parent.iterdir():
+            found = multipart_name(candidate.name)
+            if found and found.group("prefix").lower() == match.group("prefix").lower() and found.group("suffix").lower() == match.group("suffix").lower():
+                siblings[int(found.group("number"))] = candidate.resolve()
+        if 1 not in siblings: raise FileNotFoundError(f"The first multipart volume is missing: {self.path.name}")
+        missing = [number for number in range(1, max(siblings) + 1) if number not in siblings]
+        if missing: raise FileNotFoundError("Missing multipart RAR volume(s): " + ", ".join(f"part{number}" for number in missing))
+        return [siblings[number] for number in sorted(siblings)]
+    def verify_volumes(self):
+        self.volume_paths()
+        self._run(["t", "-idq", "-p-", str(self.path)], "Multipart archive verification")
     def names(self):
-        result = subprocess.run([self.executable, "lb", "-p-", str(self.path)], capture_output=True, text=True, encoding="utf-8", errors="replace", check=True)
+        self.volume_paths()
+        result = self._run(["lb", "-p-", str(self.path)], "Archive listing")
         return [line.strip().replace("\\", "/") for line in result.stdout.splitlines() if line.strip()]
     def read(self, name):
         native = name.replace("/", "\\")
@@ -49,14 +76,54 @@ class RarArchive(SourceArchive):
         return result.stdout
 
     def extract_catalog_text(self, destination: Path) -> DirectoryArchive:
-        """Extract only indexable text once; avoids one process per file for large multipart sets."""
-        destination.mkdir(parents=True, exist_ok=True)
+        """Transactionally extract the full volume set, then retain only indexable text."""
         marker = destination / ".complete"
-        if not marker.exists():
-            command = [self.executable, "x", "-inul", "-o+", "-p-", str(self.path), "*.txt", "*.yml", "*.yaml", "*.mod", "*.gfx", str(destination) + "\\"]
-            subprocess.run(command, check=True)
-            marker.write_text("catalog text extracted", encoding="utf-8")
+        if marker.exists(): return DirectoryArchive(destination)
+        self.verify_volumes()
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        staging_base = short_staging_base()
+        with tempfile.TemporaryDirectory(prefix="", dir=staging_base) as temporary:
+            temporary = Path(temporary); extracted = temporary / "x"; filtered = temporary / "f"
+            extracted.mkdir(); filtered.mkdir()
+            self._run(["x", "-idq", "-o+", "-p-", str(self.path), str(extracted) + "\\"], "Multipart archive extraction")
+            kept = 0
+            for source in extracted.rglob("*"):
+                if not source.is_file() or source.suffix.lower() not in TEXT_SUFFIXES: continue
+                target = filtered / source.relative_to(extracted); target.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(source, target); kept += 1
+            if not kept: raise RuntimeError("Multipart archive extraction completed, but no supported source files were found.")
+            (filtered / ".complete").write_text(f"{kept} catalog files", encoding="utf-8")
+            if destination.exists(): shutil.rmtree(destination)
+            shutil.move(str(filtered), str(destination))
         return DirectoryArchive(destination)
+
+
+RAR_EXIT_CODES = {1: "non-fatal warning", 2: "fatal error", 3: "CRC error or damaged archive", 4: "attempt to modify a locked archive", 5: "write error", 6: "file open error", 7: "invalid command-line option", 8: "not enough memory", 9: "file or folder creation error", 10: "no matching files", 11: "wrong or missing password", 255: "operation cancelled"}
+MULTIPART_RAR = re.compile(r"^(?P<prefix>.+?\.part)(?P<number>\d+)(?P<suffix>.*\.rar)$", re.IGNORECASE)
+
+
+def multipart_name(name: str): return MULTIPART_RAR.match(name)
+
+
+def normalize_rar_volume(path: Path) -> Path:
+    path = path.resolve(); match = multipart_name(path.name)
+    return path.with_name(f"{match.group('prefix')}1{match.group('suffix')}") if match else path
+
+
+def short_staging_base() -> Path:
+    """Choose a short writable root so legacy Windows tools stay below MAX_PATH."""
+    candidates = []
+    if os.name == "nt": candidates.append(Path(os.environ.get("SystemDrive", "C:")) / "HFSRC")
+    candidates.append(Path(tempfile.gettempdir()) / "HF")
+    errors = []
+    for candidate in candidates:
+        try:
+            candidate.mkdir(parents=True, exist_ok=True)
+            probe = candidate / f"p{os.getpid()}"
+            probe.write_bytes(b""); probe.unlink()
+            return candidate
+        except OSError as exc:
+            errors.append(f"{candidate}: {exc}")
+    raise RuntimeError("No writable short extraction root is available. " + "; ".join(errors))
 
 
 def find_unrar():

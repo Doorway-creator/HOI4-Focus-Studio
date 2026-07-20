@@ -109,7 +109,12 @@ def normalized_entity(kind: str, value: Block, refs: list[str]) -> dict:
 
 def import_sources(archive_path: str | Path, catalog_path: Path) -> dict:
     archive_path = Path(archive_path).resolve(); archive = open_archive(archive_path)
-    stat = archive_path.stat(); fingerprint = hashlib.sha256(f"{archive_path.name}:{stat.st_size}:{stat.st_mtime_ns}".encode()).hexdigest()
+    if isinstance(archive, RarArchive):
+        archive_path = archive.path
+        signature = ":".join(f"{part.name}:{part.stat().st_size}:{part.stat().st_mtime_ns}" for part in archive.volume_paths())
+    else:
+        stat = archive_path.stat(); signature = f"{archive_path.name}:{stat.st_size}:{stat.st_mtime_ns}"
+    fingerprint = hashlib.sha256(signature.encode()).hexdigest()
     if isinstance(archive, RarArchive): archive = archive.extract_catalog_text(catalog_path.parent / "cache" / fingerprint)
     names = archive.names()
     catalog = SourceCatalog(catalog_path); summaries = []
