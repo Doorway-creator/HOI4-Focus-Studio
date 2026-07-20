@@ -1,4 +1,10 @@
-# HOI4 Focus Studio 6.11.0
+# HOI4 Focus Studio 6.12.0
+
+- Adds stable internal project identities so renaming a project or exported mod never breaks protected base-source lookup, saving, loading, export, installation, updates, or backups.
+- Adds guided, validated recovery of complete legacy mod folders or ZIPs into protected per-project LocalAppData storage without retaining the legacy name or path.
+- Makes export publication transactional so failed exports leave no empty destination folder or partial ZIP.
+- Adds Shift-drag focus-tree box selection, Ctrl-click selection toggling, highlighted multi-selection, and grouped movement with live connection redraw and one-step Undo/Redo.
+- Adds Infrastructure (roads) and Railway construction rewards using HOI4's `infrastructure` and `rail_way` building identifiers.
 
 - Adds a searchable source catalog with layered Vanilla, dependency-mod, and current-project resolution, source coverage, load order, conflicts, and dependency requirements.
 - Adds imported character and national-spirit workflows for references, project-owned clones, intentional overrides, focus/event actions, and safe spirit upgrade chains.

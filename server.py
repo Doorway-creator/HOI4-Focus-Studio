@@ -35,7 +35,7 @@ from base_source import BaseSourceRequired, recover_base_source, require_base_so
 ROOT = Path(__file__).resolve().parent
 PROJECT_FILE = ROOT / "projects" / "default_project.json"
 EXPORT_ROOT = ROOT / "exports"
-APP_VERSION = "6.11.0"
+APP_VERSION = "6.12.0"
 GITHUB_RELEASES_API = "https://api.github.com/repos/Doorway-creator/HOI4-Focus-Studio/releases/latest"
 UPDATE_ROOT = ROOT / "updates"
 APP_DATA_ROOT = default_app_data_root()
@@ -147,7 +147,7 @@ def generated_effect_scripts(focus: dict) -> list[str]:
             state = int(effect.get("state", 0)); level = max(1, int(amount)); province = int(effect.get("province", 0) or 0)
             if not state: continue
             construction = f"add_building_construction = {{ type = {kind} level = {level} instant_build = yes"
-            if kind in {"bunker", "coastal_bunker", "naval_base"} and province:
+            if kind in {"rail_way", "bunker", "coastal_bunker", "naval_base"} and province:
                 construction += f" province = {province}"
             construction += " }"
             extras = []

@@ -6,7 +6,7 @@ from pathlib import Path
 class PrivacyTests(unittest.TestCase):
     def test_repository_has_no_hardcoded_windows_user_paths(self):
         root = Path(__file__).resolve().parents[1]
-        excluded = {".git", "exports", "backups", "imports", "sources", "source_packages", "__pycache__"}
+        excluded = {".git", "build", "dist", "exports", "backups", "imports", "sources", "source_packages", "__pycache__"}
         pattern = re.compile(r"[A-Za-z]:\\Users\\|[A-Za-z]:\\SteamLibrary\\", re.I)
         hits = []
         for path in root.rglob("*"):

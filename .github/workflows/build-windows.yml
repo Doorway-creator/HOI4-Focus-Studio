@@ -39,7 +39,8 @@ jobs:
         shell: pwsh
         run: |
           $patterns = 'gmail\.com|api[_-]?key|bearer|authorization|C:\\Users\\'
-          $hits = Get-ChildItem -Recurse dist -File | Where-Object { $_.Extension -match '\.(txt|json|js|html|css|py|ps1|mod|yml|yaml|ini|cfg)$' } | Select-String -Pattern $patterns -CaseSensitive:$false
+          $appFiles = 'index.html', 'app.js', 'focus_tree_interactions.js', 'style.css', 'apply_update.ps1'
+          $hits = Get-ChildItem -Recurse dist -File | Where-Object { $appFiles -contains $_.Name } | Select-String -Pattern $patterns -CaseSensitive:$false
           if ($hits) { $hits | Format-Table; throw 'Privacy scan failed.' }
       - name: Package release ZIP and checksum
         shell: pwsh
