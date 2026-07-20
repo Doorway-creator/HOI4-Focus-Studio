@@ -1,4 +1,4 @@
-# HOI4 Focus Studio 6.10.1
+# HOI4 Focus Studio 6.10.2
 
 - Resolves custom focus icons from real DDS files and sprite definitions, including custom assets with vanilla-looking `GFX_focus_*` and `GFX_goal_*` names.
 - Adds a per-focus icon export report and blocks unsafe installs when project-owned icons are unresolved or conflicting.
