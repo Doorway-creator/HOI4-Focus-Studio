@@ -15,6 +15,7 @@ import hashlib
 import sys
 import urllib.error
 import urllib.request
+import urllib.parse
 import zipfile
 from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -22,6 +23,10 @@ from io import BytesIO
 from pathlib import Path
 
 from PIL import Image
+from export_validation import validate_references
+from project_migrations import migrate_project
+from source_catalog import SourceCatalog
+from source_importer import import_sources
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_FILE = ROOT / "projects" / "default_project.json"
@@ -30,6 +35,8 @@ EXPORT_ROOT = ROOT / "exports"
 APP_VERSION = "6.10.2"
 GITHUB_RELEASES_API = "https://api.github.com/repos/Doorway-creator/HOI4-Focus-Studio/releases/latest"
 UPDATE_ROOT = ROOT / "updates"
+SOURCE_ROOT = ROOT / "sources"
+SOURCE_CATALOG = SourceCatalog(SOURCE_ROOT / "catalog.sqlite3")
 LOCAL_PATH_FIELDS = {"exportPath", "hoi4ModFolder"}
 
 
@@ -46,6 +53,12 @@ def selected_directory(value: object, label: str) -> Path:
     if not path.is_absolute():
         raise ValueError(f"The {label} folder must be an absolute path.")
     return path.resolve()
+
+
+def catalog_lookup(kind: str, target: str) -> list[dict]:
+    mapped = {"aircraft_module": "module", "tank_module": "module", "ship_module": "module", "research_bonus": "technology", "ahead_of_time": "technology", "category_bonus": "technology_category"}.get(kind, kind)
+    if not SOURCE_CATALOG.path.exists(): return []
+    return [row for row in SOURCE_CATALOG.search(mapped, target, 200) if row["entity_id"] == target]
 
 
 def matching_brace(text: str, opening: int) -> int:
@@ -116,6 +129,22 @@ def generated_effect_scripts(focus: dict) -> list[str]:
                 bonus = float(effect.get("amount", 50)) / 100
                 name = re.sub(r"[^A-Za-z0-9_]", "_", f"NHO_editor_{focus['id']}_{technology}_bonus")
                 scripts.append(f"add_tech_bonus = {{ name = {name} bonus = {bonus:g} uses = 1 technology = {technology} }}")
+    for index, unlock in enumerate(focus.get("unlocks", [])):
+        target = re.sub(r"[^A-Za-z0-9_.:-]", "", str(unlock.get("targetId", "")))
+        if not target: continue
+        action = unlock.get("action", "instant_research")
+        if action in {"instant_research", "technology_unlock"}:
+            scripts.append(f"set_technology = {{ {target} = 1 }}")
+        elif action in {"research_bonus", "category_bonus", "ahead_of_time"}:
+            bonus = max(0, float(unlock.get("bonus", 50))) / 100
+            uses = max(1, int(unlock.get("uses", 1)))
+            name = re.sub(r"[^A-Za-z0-9_]", "_", f"NHO_unlock_{focus.get('id')}_{index}")
+            selector = "category" if action == "category_bonus" else "technology"
+            ahead = f" ahead_reduction = {max(0, float(unlock.get('aheadReduction', 0))):g}" if action == "ahead_of_time" else ""
+            scripts.append(f"add_tech_bonus = {{ name = {name} bonus = {bonus:g} uses = {uses} {selector} = {target}{ahead} }}")
+        elif action in {"module_availability", "equipment_availability", "unit_availability"}:
+            technology = re.sub(r"[^A-Za-z0-9_]", "", str(unlock.get("unlockTechnology", "")))
+            if technology: scripts.append(f"set_technology = {{ {technology} = 1 }}")
     return scripts
 
 
@@ -246,6 +275,11 @@ def _make_versioned_zip(export_root: Path, package_dir: Path) -> Path:
 
 
 def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
+    migrated, _ = migrate_project(project)
+    project.clear(); project.update(migrated)
+    reference_errors = validate_references(project, catalog_lookup)
+    if reference_errors:
+        raise ValueError("Export validation failed:\n" + "\n".join(reference_errors))
     version = re.sub(r"[^A-Za-z0-9_.-]", "_", project.get("exportVersion", "v077_editor_export"))
     folder_name = _export_name(project, version)
     package_dir = export_root / folder_name
@@ -941,7 +975,16 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_json(check_for_updates())
             return
         if request_path == "/api/project":
-            self.send_json(json.loads(PROJECT_FILE.read_text(encoding="utf-8")))
+            project, _ = migrate_project(json.loads(PROJECT_FILE.read_text(encoding="utf-8")))
+            self.send_json(project)
+            return
+        if request_path == "/api/sources":
+            self.send_json({"sources": SOURCE_CATALOG.sources() if SOURCE_CATALOG.path.exists() else []})
+            return
+        if request_path == "/api/catalog/search":
+            query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            entity_type = query.get("type", [""])[0]; text = query.get("q", [""])[0]
+            self.send_json({"items": SOURCE_CATALOG.search(entity_type, text, min(250, int(query.get("limit", [100])[0]))) if SOURCE_CATALOG.path.exists() else []})
             return
         super().do_GET()
 
@@ -951,6 +994,7 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             data = json.loads(self.rfile.read(length))
             if request_path == "/api/project":
+                data, _ = migrate_project(data)
                 PROJECT_FILE.parent.mkdir(parents=True, exist_ok=True)
                 autosaves = PROJECT_FILE.parent / "autosaves"
                 autosaves.mkdir(parents=True, exist_ok=True)
@@ -1012,6 +1056,16 @@ class Handler(SimpleHTTPRequestHandler):
                 chosen = filedialog.askopenfilename(title="Choose HOI4 Focus Studio update ZIP", filetypes=[("ZIP update", "*.zip")])
                 window.destroy()
                 self.send_json({"ok": True, "path": chosen})
+            elif request_path == "/api/source/select":
+                import tkinter as tk
+                from tkinter import filedialog
+                window = tk.Tk(); window.withdraw(); window.attributes("-topmost", True)
+                chosen = filedialog.askopenfilename(title="Choose HOI4 source archive", filetypes=[("Source archives", "*.zip *.rar"), ("All files", "*.*")])
+                window.destroy(); self.send_json({"ok": True, "path": chosen})
+            elif request_path == "/api/source/import":
+                chosen = Path(str(data.get("path", ""))).resolve()
+                if not chosen.exists(): raise ValueError("The selected source archive does not exist.")
+                self.send_json({"ok": True} | import_sources(chosen, SOURCE_CATALOG.path))
             elif request_path == "/api/update/install":
                 zip_path = Path(str(data.get("path", ""))).resolve()
                 checksum_path = Path(str(data.get("checksumPath") or (str(zip_path) + ".sha256"))).resolve()

@@ -9,7 +9,7 @@
 <body>
 <header>
   <strong>HOI4 Focus Studio</strong>
-  <nav><button data-tab="tree" class="active">Focus tree</button><button data-tab="events">Events</button><button data-tab="decisions">Decisions</button><button data-tab="characters">Characters</button><button data-tab="spirits">National spirits</button><button data-tab="icons">Icon converter</button><button data-tab="import">Import mod</button></nav>
+  <nav><button data-tab="tree" class="active">Focus tree</button><button data-tab="events">Events</button><button data-tab="decisions">Decisions</button><button data-tab="characters">Characters</button><button data-tab="spirits">National spirits</button><button data-tab="sources">Sources</button><button data-tab="icons">Icon converter</button><button data-tab="import">Import mod</button></nav>
   <label class="map-profile-control">Map profile
     <select id="mapProfile"><option value="vanilla">Vanilla HOI4</option><option value="r56">Road to 56</option></select>
   </label>
@@ -48,6 +48,19 @@
     <div id="modDropZone" class="mod-drop"><strong>Drop the exported mod folder here</strong><span>or click to select the folder</span><input id="modFolder" type="file" webkitdirectory directory multiple></div>
     <button id="importMod" class="primary" disabled>Import focus tree</button>
     <p id="importResult" class="hint">Importing replaces the currently open editor project after creating a backup.</p>
+  </section>
+</main>
+
+<main id="sourcesTab" class="tab">
+  <section class="formpage source-page">
+    <h2>Imported game and dependency sources</h2>
+    <p class="hint">Sources are indexed locally and remain read-only. Exports contain only current-project definitions, intentional overrides, references, and scripted effects.</p>
+    <div class="source-actions"><button id="chooseSource">Choose ZIP or multipart RAR…</button><button id="importSource" class="primary" disabled>Import selected source</button><span id="sourceImportStatus" class="hint"></span></div>
+    <div id="sourceList"></div>
+    <div class="catalog-columns">
+      <section><h3>Characters</h3><input id="characterCatalogSearch" placeholder="Search character ID or name"><div id="characterCatalog" class="catalog-results"></div></section>
+      <section><h3>National spirits and ideas</h3><input id="ideaCatalogSearch" placeholder="Search idea ID or name"><div id="ideaCatalog" class="catalog-results"></div></section>
+    </div>
   </section>
 </main>
 

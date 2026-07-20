@@ -4,6 +4,8 @@ exports/
 backups/
 imports/
 updates/
+sources/
+source_packages/
 projects/*.json
 !projects/default_project.json
 *.spec
