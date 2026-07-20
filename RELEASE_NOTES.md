@@ -1,4 +1,7 @@
-# HOI4 Focus Studio 6.12.0
+# HOI4 Focus Studio 6.12.1
+
+- Fixes focus-tree connection creation after multi-select: destination clicks now take priority over selection toggling and group dragging while connection mode is active.
+- Empty-canvas clicks and Escape now cancel connection mode cleanly without creating or changing a connection.
 
 - Adds stable internal project identities so renaming a project or exported mod never breaks protected base-source lookup, saving, loading, export, installation, updates, or backups.
 - Adds guided, validated recovery of complete legacy mod folders or ZIPs into protected per-project LocalAppData storage without retaining the legacy name or path.

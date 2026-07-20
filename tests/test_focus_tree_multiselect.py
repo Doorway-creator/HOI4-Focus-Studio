@@ -52,6 +52,33 @@ class FocusTreeMultiSelectTests(unittest.TestCase):
         self.assertEqual(result, [["a"], ["a", "c"]])
         self.assertIn('event?.ctrlKey', self.app)
 
+    def test_connection_creation_has_priority_over_multiselect_handlers(self):
+        choose = self.app[self.app.index('function chooseFocus'):self.app.index('function connect(')]
+        drag = self.app[self.app.index('function dragStart'):self.app.index('function renderEditor')]
+        self.assertLess(choose.index('if(linking)'), choose.index('event?.ctrlKey'))
+        self.assertIn('if(linking||e.ctrlKey)return', drag)
+        self.assertIn("if(linking&&e.button===0)", self.app)
+
+    def test_all_connection_types_still_create_expected_links(self):
+        result = self.run_helper(
+            "(()=>{const f=[{id:'source'},{id:'pre'},{id:'visual'},{id:'mutual'}];"
+            "return{pre:h.connectFocuses(f,'source','pre','prerequisite'),"
+            "visual:h.connectFocuses(f,'source','visual','visual'),"
+            "mutual:h.connectFocuses(f,'source','mutual','mutual'),focuses:f}})()"
+        )
+        self.assertTrue(result['pre'])
+        self.assertTrue(result['visual'])
+        self.assertTrue(result['mutual'])
+        focuses = {focus['id']: focus for focus in result['focuses']}
+        self.assertEqual(focuses['pre']['prerequisites'], ['source'])
+        self.assertEqual(focuses['visual']['visualConnections'], ['source'])
+        self.assertEqual(focuses['source']['mutuallyExclusive'], ['mutual'])
+        self.assertEqual(focuses['mutual']['mutuallyExclusive'], ['source'])
+
+    def test_connection_mode_can_be_cancelled_by_empty_canvas_or_escape(self):
+        self.assertIn("if(linking){linking=false;$('#startLink').textContent='Connect selected…';return}", self.app)
+        self.assertIn("e.key==='Escape'&&(linking||selectedFocuses.size)", self.app)
+
     def test_group_move_preserves_offsets(self):
         result = self.run_helper(
             "(()=>{const f=[{id:'a',x:1,y:2},{id:'b',x:4,y:8},{id:'c',x:9,y:9}];"
