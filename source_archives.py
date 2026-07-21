@@ -88,7 +88,9 @@ class RarArchive(SourceArchive):
             self._run(["x", "-idq", "-o+", "-p-", str(self.path), str(extracted) + "\\"], "Multipart archive extraction")
             kept = 0
             for source in extracted.rglob("*"):
-                if not source.is_file() or source.suffix.lower() not in TEXT_SUFFIXES: continue
+                relative_lower = source.relative_to(extracted).as_posix().lower() if source.is_file() else ""
+                technology_art = source.suffix.lower() in {".dds", ".tga", ".png"} and any(marker in relative_lower for marker in ("/gfx/interface/technologies/", "/gfx/interface/equipmentdesigner/", "/gfx/interface/technology/"))
+                if not source.is_file() or (source.suffix.lower() not in TEXT_SUFFIXES and not technology_art): continue
                 target = filtered / source.relative_to(extracted); target.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(source, target); kept += 1
             if not kept: raise RuntimeError("Multipart archive extraction completed, but no supported source files were found.")
             (filtered / ".complete").write_text(f"{kept} catalog files", encoding="utf-8")

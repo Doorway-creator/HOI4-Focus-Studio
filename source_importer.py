@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import shutil
 
 from clausewitz_parser import Block, identifiers, parse, serialize
 from source_archives import RarArchive, TEXT_SUFFIXES, open_archive
@@ -18,6 +19,16 @@ PATH_TYPES = [
     ("doctrine", "/common/doctrines/"), ("design", "/history/units/"),
 ]
 CONTAINERS = {"character": "characters", "idea": "ideas", "technology": "technologies", "unit": "sub_units"}
+
+
+def parse_localisation(text: str) -> dict[str, str]:
+    """Parse HOI4 localisation with BOM, language headers, versions and quotes."""
+    result = {}
+    for line in text.lstrip("\ufeff").splitlines():
+        if re.match(r"^\s*l_[A-Za-z_]+\s*:\s*$", line): continue
+        match = re.match(r'^\s*([^\s:#]+)\s*:\s*\d*\s+"((?:\\.|[^"\\])*)"', line)
+        if match: result[match.group(1)] = match.group(2).replace('\\"', '"')
+    return result
 
 
 def source_id(name: str) -> str: return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
@@ -88,6 +99,11 @@ def classify(path: str):
 
 def normalized_entity(kind: str, value: Block, refs: list[str]) -> dict:
     result = {"references": refs, "category": kind}
+    def numeric(raw, default=0):
+        try:
+            number = float(raw)
+            return int(number) if number.is_integer() else number
+        except (TypeError, ValueError): return default
     def block_text(key):
         block = value.first(key)
         return serialize(block) if isinstance(block, Block) else ""
@@ -104,6 +120,23 @@ def normalized_entity(kind: str, value: Block, refs: list[str]) -> dict:
         result.update({"roles": roles or ["General"], "traits": traits, "advisorSlots": slots, "allowed": block_text("allowed"), "visible": block_text("visible"), "cost": costs[0] if costs else value.first("cost", 0), "aiWillDo": ai})
     elif kind == "idea":
         result.update({"picture": value.first("picture", ""), "removalCost": value.first("removal_cost", -1), "allowed": block_text("allowed"), "visible": block_text("visible"), "modifiers": block_text("modifier"), "targetedModifiers": block_text("targeted_modifier"), "equipmentBonuses": block_text("equipment_bonus"), "researchBonuses": block_text("research_bonus")})
+    elif kind == "technology":
+        folder = value.first("folder"); folder_name, position = "", {"x": 0, "y": 0}
+        if isinstance(folder, Block):
+            folder_name = str(folder.first("name", "")); position_block = folder.first("position")
+            if isinstance(position_block, Block): position = {"x": numeric(position_block.first("x", 0)), "y": numeric(position_block.first("y", 0))}
+        dependencies = value.first("dependencies"); prerequisites = [entry.key for entry in dependencies.entries] if isinstance(dependencies, Block) else []
+        paths = [block for block in value.values("path") if isinstance(block, Block)]
+        leads_to = [str(block.first("leads_to_tech")) for block in paths if block.first("leads_to_tech")]
+        categories = value.first("categories")
+        unlock_mapping = {"enable_equipments": "equipment", "enable_equipment_modules": "module", "enable_subunits": "unit"}
+        unlocks = []
+        for key, unlock_type in unlock_mapping.items():
+            for block in value.values(key):
+                if isinstance(block, Block): unlocks.extend({"type": unlock_type, "id": target} for target in identifiers(block) if target not in {"yes", "no"})
+        structural = {"path", "dependencies", "research_cost", "start_year", "folder", "categories", "ai_will_do", *unlock_mapping}
+        modifiers = serialize(Block([entry for entry in value.entries if entry.key not in structural]))
+        result.update({"year": value.first("start_year", 1936), "researchCost": value.first("research_cost", 1), "folder": folder_name, "position": position, "prerequisites": prerequisites, "leadsTo": leads_to, "mutuallyExclusive": [str(x) for block in value.values("XOR") if isinstance(block, Block) for x in identifiers(block)], "categories": sorted(identifiers(categories)) if isinstance(categories, Block) else [], "modifiers": modifiers, "unlocks": unlocks, "icon": "GFX_technology_"})
     return result
 
 
@@ -132,9 +165,16 @@ def import_sources(archive_path: str | Path, catalog_path: Path) -> dict:
             localisation = {}
             for rel, full in relative.items():
                 if "/localisation/english/" in ("/" + rel.lower()) and rel.lower().endswith(".yml"):
-                    for line in archive.read_text(full).splitlines():
-                        match = re.match(r'\s*([^\s:#]+):\d*\s+"(.*)"', line)
-                        if match: localisation[match.group(1)] = match.group(2)
+                    parsed_localisation = parse_localisation(archive.read_text(full)); localisation.update(parsed_localisation)
+                    for loc_key, loc_value in parsed_localisation.items(): db.execute("INSERT OR REPLACE INTO localisations(source_id,language,loc_key,loc_value,source_file) VALUES(?,?,?,?,?)", (sid, "english", loc_key, loc_value, rel))
+            gfx_definitions = {}
+            for rel, full in relative.items():
+                if not rel.lower().endswith(".gfx"): continue
+                gfx_text = archive.read_text(full)
+                for block in re.findall(r"spriteType\s*=\s*\{(.*?)\}", gfx_text, re.I | re.S):
+                    name = re.search(r"name\s*=\s*\"?([^\"\s}]+)", block, re.I); texture = re.search(r"texturefile\s*=\s*\"([^\"]+)\"", block, re.I)
+                    if name and texture: gfx_definitions[name.group(1)] = {"texture": texture.group(1).replace("\\", "/"), "file": rel}
+            asset_names = {rel.lower().replace("\\", "/"): full for rel, full in relative.items() if Path(rel).suffix.lower() in {".dds", ".tga", ".png"}}
             imported = 0
             for rel, full in relative.items():
                 kind = classify(rel)
@@ -145,9 +185,28 @@ def import_sources(archive_path: str | Path, catalog_path: Path) -> dict:
                 for entry in definition_entries(kind, document):
                     entity_id = str(entry.key); refs = sorted(identifiers(entry.value) - {entity_id})
                     normalized = normalized_entity(kind, entry.value, refs)
+                    if kind == "technology":
+                        icon_key = f"GFX_technology_{entity_id}"
+                        unlock_ids = [item["id"] for item in normalized.get("unlocks", []) if item.get("id") not in {None, "yes", "no"}]
+                        searched_keys = [icon_key, entity_id, *[key for target in unlock_ids for key in (f"GFX_technology_{target}", f"GFX_{target}", target)]]
+                        sprite = next((gfx_definitions[key] for key in searched_keys if key in gfx_definitions), {})
+                        resolution = "direct technology icon" if icon_key in gfx_definitions else "unlocked module/equipment icon" if sprite else ""
+                        if not sprite:
+                            sprite = next((value for key, value in gfx_definitions.items() if entity_id.lower() in key.lower() and not re.search(r"GFX_(NOR|GER|SWE|ENG|ITA)_", key, re.I)), {})
+                            if sprite: resolution = "interface-layout icon reference"
+                        wanted = str(sprite.get("texture", "")).lower().lstrip("/")
+                        matched = asset_names.get(wanted) or next((full_name for rel_name, full_name in asset_names.items() if Path(rel_name).stem.lower() in {entity_id.lower(), icon_key.lower(), ('gfx_'+entity_id).lower()}), None)
+                        unlocked_equipment = next((item["id"] for item in normalized.get("unlocks", []) if item.get("type") == "equipment" and item.get("id") not in {"yes", "no"} and (localisation.get(item.get("id")) or any(localisation.get(f"{tag}_{item.get('id')}") for tag in ("NOR", "GER", "SWE", "ENG", "ITA")))), "")
+                        country_names = {tag: localisation.get(f"{tag}_{unlocked_equipment}") for tag in ("NOR", "GER", "SWE", "ENG", "ITA") if unlocked_equipment and localisation.get(f"{tag}_{unlocked_equipment}")}
+                        resolved_name = localisation.get(entity_id) or localisation.get(unlocked_equipment) or entity_id
+                        normalized.update({"icon": icon_key, "interfaceFile": sprite.get("file", ""), "layoutSource": sprite.get("file", "") or rel, "localisationKey": entity_id, "descriptionKey": entity_id + "_desc", "iconResolved": bool(matched), "iconResolution": resolution if matched else "", "iconSearch": {"keys": searched_keys, "files": list(dict.fromkeys([rel, sprite.get("file", "")]))}, "resolvedDisplayName": resolved_name, "countryDisplayNames": country_names})
+                        if matched:
+                            suffix = Path(matched).suffix.lower(); asset_dir = catalog_path.parent / "assets" / sid; asset_dir.mkdir(parents=True, exist_ok=True)
+                            asset_name = re.sub(r"[^A-Za-z0-9_.-]", "_", entity_id) + suffix
+                            (asset_dir / asset_name).write_bytes(archive.read(matched)); normalized["iconUrl"] = f"/api/source-icon?source={sid}&name={asset_name}"
                     requirements = {"sources": [sid] if layer != "vanilla" else [], "coverage": cov.get(kind + "s", {})}
                     raw = serialize(entry.value)
-                    db.execute("INSERT OR IGNORE INTO entities(entity_type,entity_id,display_name,source_id,source_file,source_line,raw_text,normalized,requirements) VALUES(?,?,?,?,?,?,?,?,?)", (kind, entity_id, localisation.get(entity_id, entity_id), sid, rel, entry.line, raw, json.dumps(normalized), json.dumps(requirements)))
+                    db.execute("INSERT OR IGNORE INTO entities(entity_type,entity_id,display_name,source_id,source_file,source_line,raw_text,normalized,requirements) VALUES(?,?,?,?,?,?,?,?,?)", (kind, entity_id, normalized.get("resolvedDisplayName", localisation.get(entity_id, entity_id)), sid, rel, entry.line, raw, json.dumps(normalized), json.dumps(requirements)))
                     for ref in refs: db.execute("INSERT INTO edges VALUES(?,?,?,?,?,?)", (kind, entity_id, "references", "unknown", ref, sid))
                     imported += 1
             summaries.append({"id": sid, "name": display, "coverage": cov, "entities": imported})

@@ -6,6 +6,9 @@ REFERENCE_TYPES = {"technology", "technology_category", "equipment", "unit", "do
 
 def validate_references(project: dict, lookup) -> list[str]:
     errors = []
+    project_technologies = {item.get("id") for item in project.get("projectTechnologies", [])}
+    project_equipment = {item.get("id") for item in project.get("projectEquipment", [])}
+    project_modules = {item.get("id") for item in project.get("projectModules", [])}
     enabled = {x.get("sourceId") for x in project.get("dependencies", []) if x.get("enabled", True)}
     for focus in project.get("focuses", []):
         for unlock in focus.get("unlocks", []):
@@ -13,7 +16,8 @@ def validate_references(project: dict, lookup) -> list[str]:
             if kind not in REFERENCE_TYPES and kind not in {"research_bonus", "category_bonus", "ahead_of_time"}:
                 errors.append(f"{focus.get('id')}: invalid unlock type {kind}"); continue
             rows = lookup(kind, target)
-            if not rows: errors.append(f"{focus.get('id')}: unresolved {kind} reference {target}")
+            project_owned = kind == "technology" and target in project_technologies or kind == "equipment" and target in project_equipment or kind in {"module", "aircraft_module", "tank_module", "ship_module"} and target in project_modules
+            if not rows and not project_owned: errors.append(f"{focus.get('id')}: unresolved {kind} reference {target}")
             required = set(unlock.get("requiredSources", []))
             missing = required - enabled
             if missing: errors.append(f"{focus.get('id')}: missing dependency sources for {target}: {', '.join(sorted(missing))}")

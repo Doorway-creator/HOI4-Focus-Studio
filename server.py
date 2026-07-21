@@ -31,17 +31,21 @@ from project_content import character_action_script, spirit_action_script
 from clausewitz_parser import Block, parse as parse_clausewitz, serialize as serialize_clausewitz
 from project_storage import ProjectStorage, default_app_data_root
 from base_source import BaseSourceRequired, recover_base_source, require_base_source
+from technology_tree import export_project_technologies, validate_project_technologies
+from foreign_technology import foreign_link_effects, foreign_link_preview
+from playset_snapshot import create_playset_snapshot, list_snapshots
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_FILE = ROOT / "projects" / "default_project.json"
 EXPORT_ROOT = ROOT / "exports"
-APP_VERSION = "6.12.1"
+APP_VERSION = "6.13.0"
 GITHUB_RELEASES_API = "https://api.github.com/repos/Doorway-creator/HOI4-Focus-Studio/releases/latest"
 UPDATE_ROOT = ROOT / "updates"
 APP_DATA_ROOT = default_app_data_root()
 PROJECT_STORAGE = ProjectStorage(APP_DATA_ROOT, PROJECT_FILE)
 SOURCE_ROOT = APP_DATA_ROOT / "sources"
 SOURCE_CATALOG = SourceCatalog(SOURCE_ROOT / "catalog.sqlite3")
+PLAYSET_ROOT = APP_DATA_ROOT / "playset_snapshots"
 LOCAL_PATH_FIELDS = {"exportPath", "hoi4ModFolder"}
 
 
@@ -179,6 +183,7 @@ def generated_effect_scripts(focus: dict) -> list[str]:
         elif action in {"module_availability", "equipment_availability", "unit_availability"}:
             technology = re.sub(r"[^A-Za-z0-9_]", "", str(unlock.get("unlockTechnology", "")))
             if technology: scripts.append(f"set_technology = {{ {technology} = 1 }}")
+    scripts.extend(foreign_link_effects(focus))
     return scripts
 
 
@@ -318,6 +323,8 @@ def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
     migrated, _ = migrate_project(project)
     project.clear(); project.update(migrated)
     reference_errors = validate_references(project, catalog_lookup)
+    technology_errors, _ = validate_project_technologies(project, catalog_lookup)
+    reference_errors.extend(technology_errors)
     if reference_errors:
         raise ValueError("Export validation failed:\n" + "\n".join(reference_errors))
     version = re.sub(r"[^A-Za-z0-9_.-]", "_", project.get("exportVersion", "v077_editor_export"))
@@ -352,6 +359,7 @@ def export_project(project: dict, export_root: Path = EXPORT_ROOT) -> Path:
                 diplomacy_actions.append((focus, action))
     rendered = "\n\n".join(render_focus(x, project.get("events", []), project.get("decisions", []), project.get("characters", []), project.get("nationalSpirits", [])) for x in project.get("focuses", []))
     focus_file.write_text(header + rendered + "\n}\n", encoding="utf-8")
+    export_project_technologies(project, target, PROJECT_STORAGE.icons(project["projectId"]), catalog_lookup)
 
     events_dir = target / "events"
     events_dir.mkdir(parents=True, exist_ok=True)
@@ -1060,11 +1068,38 @@ class Handler(SimpleHTTPRequestHandler):
         if request_path == "/api/sources":
             self.send_json({"sources": SOURCE_CATALOG.sources() if SOURCE_CATALOG.path.exists() else []})
             return
+        if request_path == "/api/playset-snapshots":
+            self.send_json({"snapshots": list_snapshots(PLAYSET_ROOT)})
+            return
         if request_path == "/api/catalog/search":
             query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
             entity_type = query.get("type", [""])[0]; text = query.get("q", [""])[0]
             self.send_json({"items": SOURCE_CATALOG.search(entity_type, text, min(250, int(query.get("limit", [100])[0]))) if SOURCE_CATALOG.path.exists() else []})
             return
+        if request_path == "/api/technology-tree":
+            query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            profile = query.get("profile", ["vanilla"])[0]; country = query.get("country", ["NOR"])[0]
+            category = query.get("category", [""])[0]; text = query.get("q", [""])[0]; include_hidden = query.get("includeHidden", ["0"])[0] == "1"
+            self.send_json(SOURCE_CATALOG.technology_tree(profile, country, category, text, include_hidden) if SOURCE_CATALOG.path.exists() else {"items": [], "categories": [], "profile": profile, "country": country})
+            return
+        if request_path == "/api/source-asset":
+            query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            source = re.sub(r"[^A-Za-z0-9_.-]", "", query.get("source", [""])[0]); name = Path(query.get("name", [""])[0]).name
+            asset = (SOURCE_ROOT / "assets" / source / name).resolve(); expected = (SOURCE_ROOT / "assets").resolve()
+            if not str(asset).startswith(str(expected)) or not asset.is_file(): self.send_error(404); return
+            payload = asset.read_bytes(); self.send_response(200); self.send_header("Content-Type", "image/png" if asset.suffix.lower()==".png" else "image/vnd-ms.dds"); self.send_header("Content-Length", str(len(payload))); self.end_headers(); self.wfile.write(payload); return
+        if request_path == "/api/source-icon":
+            query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            source = re.sub(r"[^A-Za-z0-9_.-]", "", query.get("source", [""])[0]); name = Path(query.get("name", [""])[0]).name
+            asset = (SOURCE_ROOT / "assets" / source / name).resolve(); assets_root = (SOURCE_ROOT / "assets").resolve()
+            if not str(asset).startswith(str(assets_root)) or not asset.is_file(): self.send_error(404); return
+            preview = SOURCE_ROOT / "previews" / source / (asset.stem + ".png")
+            if not preview.is_file() or preview.stat().st_mtime_ns < asset.stat().st_mtime_ns:
+                preview.parent.mkdir(parents=True, exist_ok=True)
+                temporary = preview.with_suffix(".tmp.png")
+                with Image.open(asset) as image: image.convert("RGBA").save(temporary, "PNG")
+                os.replace(temporary, preview)
+            payload = preview.read_bytes(); self.send_response(200); self.send_header("Content-Type", "image/png"); self.send_header("Cache-Control", "public, max-age=31536000, immutable"); self.send_header("Content-Length", str(len(payload))); self.end_headers(); self.wfile.write(payload); return
         super().do_GET()
 
     def do_POST(self):
@@ -1149,6 +1184,30 @@ class Handler(SimpleHTTPRequestHandler):
                 chosen = Path(str(data.get("path", ""))).resolve()
                 if not chosen.exists(): raise ValueError("The selected source archive does not exist.")
                 self.send_json({"ok": True} | import_sources(chosen, SOURCE_CATALOG.path))
+            elif request_path == "/api/playset/select-folders":
+                import tkinter as tk
+                from tkinter import filedialog
+                window = tk.Tk(); window.withdraw(); window.attributes("-topmost", True)
+                chosen = filedialog.askdirectory(title="Choose an installed mod folder for the frozen playset snapshot", mustexist=True)
+                window.destroy(); self.send_json({"ok": True, "path": chosen})
+            elif request_path == "/api/playset/snapshot":
+                sources = data.get("sources", [])
+                if not isinstance(sources, list) or not sources: raise ValueError("Choose at least one source folder in playset load order.")
+                self.send_json({"ok": True, "snapshot": create_playset_snapshot(PLAYSET_ROOT, str(data.get("name", "Custom playset snapshot")), sources)})
+            elif request_path == "/api/foreign-technology/preview":
+                self.send_json({"ok": True} | foreign_link_preview(data))
+            elif request_path == "/api/technology/diagnostics/export":
+                diagnostics = data.get("diagnostics", {})
+                if not isinstance(diagnostics, dict): raise ValueError("Technology diagnostics are missing.")
+                report_root = APP_DATA_ROOT / "diagnostics"; report_root.mkdir(parents=True, exist_ok=True)
+                report = report_root / f"technology-source-{int(time.time())}.txt"
+                lines = ["HOI4 Focus Studio Technology Source Diagnostics", ""] + [f"{key}: {json.dumps(value, ensure_ascii=False) if isinstance(value, (list, dict)) else value}" for key, value in diagnostics.items()]
+                report.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                self.send_json({"ok": True, "path": str(report)})
+            elif request_path == "/api/technology/validate":
+                checked, _ = migrate_project(data)
+                errors, warnings = validate_project_technologies(checked, catalog_lookup)
+                self.send_json({"ok": not errors, "errors": errors, "warnings": warnings})
             elif request_path == "/api/update/install":
                 zip_path = Path(str(data.get("path", ""))).resolve()
                 checksum_path = Path(str(data.get("checksumPath") or (str(zip_path) + ".sha256"))).resolve()

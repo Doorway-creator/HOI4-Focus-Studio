@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HOI4 Focus Studio v6.11.0</title>
+<title>HOI4 Focus Studio v6.13.0</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
   <strong>HOI4 Focus Studio</strong>
   <button id="topSources" data-tab="sources" class="source-nav-button">Sources</button>
-  <nav><button data-tab="tree" class="active">Focus tree</button><button data-tab="events">Events</button><button data-tab="decisions">Decisions</button><button data-tab="characters">Characters</button><button data-tab="spirits">National spirits</button><button data-tab="icons">Icon converter</button><button data-tab="import">Import mod</button></nav>
+  <nav><button data-tab="tree" class="active">Focus tree</button><button data-tab="tech">Tech Trees</button><button data-tab="events">Events</button><button data-tab="decisions">Decisions</button><button data-tab="characters">Characters</button><button data-tab="spirits">National spirits</button><button data-tab="icons">Icon converter</button><button data-tab="import">Import mod</button></nav>
   <label class="map-profile-control">Map profile
     <select id="mapProfile"><option value="vanilla">Vanilla HOI4</option><option value="r56">Road to 56</option></select>
   </label>
@@ -41,6 +41,41 @@
   </aside>
   <section id="viewport"><div id="selectionBox" hidden></div><div id="world"><svg id="edges"></svg><div id="nodes"></div></div></section>
   <aside id="focusEditor" class="editor"><h2>Focus</h2><p>Select a focus.</p></aside>
+</main>
+
+<main id="techTab" class="tab tech-layout">
+  <aside class="tools tech-tools">
+    <h2>Tech Trees <span class="experimental-badge">Experimental</span></h2>
+    <p class="hint">Browse imported trees as players see them. Imported definitions are always read-only.</p>
+    <label>Source environment<select id="techSource"><option value="vanilla">Vanilla only</option><option value="road_to_56">Road to 56</option><option value="playset">Custom imported playset snapshot</option></select></label>
+    <section class="playset-box"><strong>Playset snapshot <span class="experimental-badge">Experimental</span></strong><p class="hint">Frozen read-only sources resolve in the listed order; the current project overlay is always last.</p><input id="playsetName" placeholder="Snapshot name"><div id="playsetSources"></div><button id="addPlaysetSource">Add installed mod folder…</button><button id="createPlaysetSnapshot">Create frozen snapshot</button><select id="playsetSnapshot"><option value="">No custom snapshot selected</option></select><p id="playsetProgress" class="hint"></p></section>
+    <label>Country<select id="techCountry"><option value="NOR">Norway</option><option value="GER">Germany</option><option value="SWE">Sweden</option><option value="ENG">United Kingdom</option><option value="ITA">Italy</option></select></label>
+    <label>Category<select id="techCategory"><option value="">Choose a category</option></select></label>
+    <label>View mode<select id="techViewMode"><option value="game">Game view</option><option value="modder">Modder view</option></select></label>
+    <label class="checkline"><input id="techShowAllConnections" type="checkbox"> Show all connections</label>
+    <label class="checkline"><input id="techIncludeHidden" type="checkbox"> Debug: include hidden/internal technologies</label>
+    <label>Search<input id="techSearch" placeholder="Technology ID or name"></label>
+    <button id="newTechnology" class="primary">+ New custom technology</button>
+    <button id="connectTechnology">Connect project technologies…</button>
+    <button id="validateTechnologies">Validate compatibility</button>
+    <button id="reflowTechnologyTree">Reflow fallback layout</button>
+    <div class="tech-zoom-controls" aria-label="Technology tree zoom controls">
+      <button id="techZoomOut" type="button" aria-label="Zoom out">−</button>
+      <output id="techZoomPercent" for="techZoom">100%</output>
+      <button id="techZoomIn" type="button" aria-label="Zoom in">+</button>
+      <button id="techZoomReset" type="button">100%</button>
+      <button id="fitTechnologyTree" type="button">Fit tree</button>
+    </div>
+    <label>Zoom<input id="techZoom" type="range" min="50" max="200" value="100"></label>
+    <p id="techCountryStatus" class="tree-status">Shared technology tree — no country-specific replacement</p>
+    <p id="techProfileWarning" class="source-warning" hidden></p>
+    <p id="techWarnings" class="hint">Imported technologies are read-only. Review generated effects before export.</p>
+    <details open><summary>Layout diagnostics</summary><div id="techDiagnostics" class="tech-diagnostics"><p class="hint">No layout warnings.</p></div></details>
+    <details open><summary>Technology Source Diagnostics</summary><div id="techSourceDiagnostics" class="source-diagnostics"><p class="hint">Open a technology category to collect diagnostics.</p></div><button id="exportTechDiagnostics">Export diagnostic report</button></details>
+  </aside>
+  <section id="techViewport" class="tech-viewport" tabindex="0" aria-label="Technology tree canvas"><div id="techEmptyState" class="tech-empty" hidden>No renderable technologies exist in this category.</div><div id="techWorld"><div id="techSurface"><svg id="techEdges"></svg><div id="techNodes"></div></div></div></section>
+  <button id="toggleTechInspector" class="tech-inspector-toggle" type="button" aria-expanded="true">Collapse inspector</button>
+  <aside id="techInspector" class="editor"><h2>Technology</h2><p>Select an imported or project-owned technology.</p></aside>
 </main>
 
 <main id="importTab" class="tab">
@@ -138,6 +173,9 @@
 </dialog>
 <div id="contextMenu" class="context-menu" hidden></div>
 <script src="focus_tree_interactions.js"></script>
+<script src="technology_layout.js"></script>
+<script src="technology_viewport.js"></script>
+<script src="zoom_controller.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

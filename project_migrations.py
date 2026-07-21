@@ -3,18 +3,19 @@ from __future__ import annotations
 import copy
 import uuid
 
-CURRENT_SCHEMA = 4
+CURRENT_SCHEMA = 7
 
 
 def migrate_project(project: dict) -> tuple[dict, bool]:
     migrated = copy.deepcopy(project); changed = False
     if "projectId" not in migrated:
         migrated["projectId"] = str(uuid.uuid4()); changed = True
-    defaults = {"dependencies": [], "references": [], "overrides": [], "designReferences": []}
+    defaults = {"dependencies": [], "references": [], "overrides": [], "designReferences": [], "projectTechnologies": [], "projectEquipment": [], "projectModules": [], "technologyProfile": "vanilla", "technologySourceOverride": False, "lockedTechnology": None, "technologyEnvironment": "vanilla"}
     for key, value in defaults.items():
         if key not in migrated: migrated[key] = copy.deepcopy(value); changed = True
     for focus in migrated.get("focuses", []):
         if "unlocks" not in focus: focus["unlocks"] = []; changed = True
+        if "foreignTechnologyLinks" not in focus: focus["foreignTechnologyLinks"] = []; changed = True
         for key in ("characterActions", "spiritActions"):
             if key not in focus: focus[key] = []; changed = True
     for event in migrated.get("events", []):

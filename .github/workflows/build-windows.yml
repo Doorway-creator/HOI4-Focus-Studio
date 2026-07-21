@@ -28,6 +28,9 @@ jobs:
             --add-data "index.html;." `
             --add-data "app.js;." `
             --add-data "focus_tree_interactions.js;." `
+            --add-data "technology_layout.js;." `
+            --add-data "technology_viewport.js;." `
+            --add-data "zoom_controller.js;." `
             --add-data "style.css;." `
             --add-data "data;data" `
             --add-data "icon-previews;icon-previews" `
@@ -39,7 +42,7 @@ jobs:
         shell: pwsh
         run: |
           $patterns = 'gmail\.com|api[_-]?key|bearer|authorization|C:\\Users\\'
-          $appFiles = 'index.html', 'app.js', 'focus_tree_interactions.js', 'style.css', 'apply_update.ps1'
+          $appFiles = 'index.html', 'app.js', 'focus_tree_interactions.js', 'technology_layout.js', 'technology_viewport.js', 'zoom_controller.js', 'style.css', 'apply_update.ps1'
           $hits = Get-ChildItem -Recurse dist -File | Where-Object { $appFiles -contains $_.Name } | Select-String -Pattern $patterns -CaseSensitive:$false
           if ($hits) { $hits | Format-Table; throw 'Privacy scan failed.' }
       - name: Package release ZIP and checksum

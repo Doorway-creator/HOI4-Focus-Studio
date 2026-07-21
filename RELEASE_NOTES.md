@@ -1,19 +1,19 @@
-# HOI4 Focus Studio 6.12.1
+# HOI4 Focus Studio 6.13.0
 
-- Fixes focus-tree connection creation after multi-select: destination clicks now take priority over selection toggling and group dragging while connection mode is active.
-- Empty-canvas clicks and Escape now cancel connection mode cleanly without creating or changing a connection.
+## Experimental Technology Trees
 
-- Adds stable internal project identities so renaming a project or exported mod never breaks protected base-source lookup, saving, loading, export, installation, updates, or backups.
-- Adds guided, validated recovery of complete legacy mod folders or ZIPs into protected per-project LocalAppData storage without retaining the legacy name or path.
-- Makes export publication transactional so failed exports leave no empty destination folder or partial ZIP.
-- Adds Shift-drag focus-tree box selection, Ctrl-click selection toggling, highlighted multi-selection, and grouped movement with live connection redraw and one-step Undo/Redo.
-- Adds Infrastructure (roads) and Railway construction rewards using HOI4's `infrastructure` and `rail_way` building identifiers.
+- Browse read-only Vanilla and Road to 56 technologies for Norway, Germany, Sweden, the United Kingdom, and Italy with player-facing names, icons, source layouts, filtering, search, Game view, and Modder view.
+- Navigate large trees with shared Focus Tree zoom behavior, cursor-centred zoom, pan, scrollbars, Fit tree, remembered per-view positions, and a collapsible inspector.
+- Inspect source files, prerequisites, mutually exclusive links, years, costs, modifiers, unlocks, localisation, icons, and non-fatal source/layout diagnostics.
+- Clone imported technologies or create project-owned technologies without modifying Vanilla, Road to 56, Workshop, or imported source files.
+- Store technology definitions, tree attachments, locked Focus references, protected playset snapshots, and profile-specific prerequisites additively.
+- Keep direct unlock tools separate from foreign technology and licensing. Unsupported licence/manufacturing requests refuse generation rather than guessing syntax.
+- Resolve equipment shipments from explicit unlocked equipment IDs where possible, allow warned manual correction, and preview exact generated HOI4 code.
 
-- Adds a searchable source catalog with layered Vanilla, dependency-mod, and current-project resolution, source coverage, load order, conflicts, and dependency requirements.
-- Adds imported character and national-spirit workflows for references, project-owned clones, intentional overrides, focus/event actions, and safe spirit upgrade chains.
-- Adds the focus-editor Unlocks panel for imported technologies, equipment, units, doctrines, MIOs, modules, research bonuses, and ahead-of-time reductions.
-- Adds a visible Sources screen plus direct imported-content entry points from Characters, National spirits, and the focus editor.
-- Adds transactional multipart RAR importing: any selected volume resolves to part 1, all parts are verified, and catalogable files are filtered after reliable extraction.
-- Uses a short Windows extraction root to support deeply nested source assets, then atomically publishes the filtered cache and always cleans temporary staging.
-- Expands validation for duplicate or unresolved references, missing dependencies, conflicts, and invalid technology, equipment, module, and design references.
-- Preserves existing projects through additive migration and exports only current-project additions, overrides, localisation, references, and scripted effects—not dependency-mod content.
+## Safety and compatibility
+
+- Existing projects retain their stable project ID, focuses, events, decisions, characters, national spirits, and protected recovered base source.
+- Export includes only project-owned technology definitions, localisation, interface entries, icons, and linked project-owned equipment/modules.
+- Imported technologies remain read-only, with a visible reminder to review generated effects before export.
+- The updater continues to replace program files only and preserves projects, exports, backups, settings, selected paths, protected base sources, source catalogs, and playset snapshots.
+- Retains the 6.12.1 connection-mode hotfix: destination clicks take priority while creating focus connections, while multi-select and grouped movement remain available outside connection mode.
