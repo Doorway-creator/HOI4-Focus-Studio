@@ -151,7 +151,9 @@ class SourceCacheTests(unittest.TestCase):
             registry.path.write_text(__import__('json').dumps({"version":1,"packages":[{"id":"source:legacy_source","name":"Legacy source","path":str(root/'missing'/filename),"sourceIds":["renamed_source"],"sourceNames":["Legacy source"],"fingerprint":"","enabled":True}]}), encoding="utf-8")
             matches = registry.recovery_candidates("source:legacy_source", [first, second])
             self.assertEqual(len(matches), 2)
-            self.assertEqual({Path(item["path"]).parent for item in matches}, {first, second})
+            match_parents = [Path(item["path"]).parent for item in matches]
+            for expected in (first, second):
+                self.assertTrue(any(os.path.samefile(actual, expected) for actual in match_parents))
 
     def test_missing_source_ui_recovers_locally_before_native_picker(self):
         app = (Path(__file__).resolve().parents[1] / "app.js").read_text(encoding="utf-8")
