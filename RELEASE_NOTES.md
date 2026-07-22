@@ -1,22 +1,19 @@
-# HOI4 Focus Studio 6.13.1
+# HOI4 Focus Studio 6.13.2
 
-## Technology source fidelity hotfix
+## Production source controls hotfix
 
-- Restores player-facing technology names, recursive localisation, source-driven layouts, and packaged Vanilla/Road to 56 icon resolution, including inherited BBA and NSB assets.
-- Validates technology catalogue schema and fidelity before rendering and provides visible rebuild actions with progress and diagnostics.
-- Keeps imported technologies read-only and preserves the experimental Technology Trees, Focus Lock, and foreign-technology linking introduced in 6.13.0.
+- Makes Reselect source, Remove source, Move earlier, and Move later respond consistently in the standard Windows executable.
+- Opens the native source picker in the foreground instead of leaving a hidden PowerShell dialog waiting behind the browser.
+- Lets the direct executable select its own local port so it cannot attach the browser to an older Studio process on a fixed port.
 
-## Stable source recovery
+## Automatic source recovery
 
-- Stores registered package locations in a durable registry outside the replaceable SQLite catalogue and migrates existing 6.13.0 registrations additively.
-- Merges duplicate registrations by stable package/source ID, updates paths without relying on filenames, and displays the current path with Reselect source and Remove source actions.
-- Automatically searches known local `source_packages` folders for missing packages, preferring stable package identity and using exact filename only as a fallback.
-- Uses a native Windows file picker when automatic recovery finds no match and an in-app chooser when several valid copies are available.
-- Corrects portable multipart-RAR extraction to use the true short absolute `C:\HFSRC` staging root.
+- Searches the standard local `C:\GitHub\HOI4-Focus-Studio\source_packages` location without relying on a tester launcher or a user-specific path.
+- Repairs a uniquely matched missing durable source registration before rebuilding the technology catalogue.
+- Keeps cache publication transactional; a missing, ambiguous, or failed source import preserves the previously validated catalogue.
 
 ## Safety and compatibility
 
-- Source-cache rebuilds remain transactional: a failed import or rebuild leaves the previous validated catalogue active.
-- The normal executable launches directly and uses `%LOCALAPPDATA%\HOI4 Focus Studio` without a tester launcher or storage override.
-- Existing projects, protected base sources, stable project IDs, focus links, imported dependencies, export settings, playset snapshots, and source registry data are preserved during migration and update.
-- This hotfix does not add technology rename or icon-override editing; that work remains deferred.
+- Uses normal `%LOCALAPPDATA%\HOI4 Focus Studio` production storage when launched directly from `HOI4 Focus Studio.exe`.
+- Preserves projects, protected base sources, stable project IDs, focus links, dependency metadata, export settings, and existing catalogues.
+- Contains no technology editing, project schema, or imported-source semantic changes.

@@ -164,7 +164,35 @@ class SourceCacheTests(unittest.TestCase):
         self.assertIn("Could not open the source picker", app)
         server = (Path(__file__).resolve().parents[1] / "server.py").read_text(encoding="utf-8")
         self.assertIn("System.Windows.Forms.OpenFileDialog", server)
-        self.assertIn('"-STA", "-WindowStyle", "Hidden"', server)
+        self.assertIn("$dialog.ShowDialog($owner)", server)
+        self.assertIn("$owner.TopMost=$true", server)
+        self.assertNotIn('"-STA", "-WindowStyle", "Hidden"', server)
+
+    def test_production_known_roots_include_local_repository_source_packages(self):
+        from server import known_source_package_roots
+        expected = Path((os.environ.get("SystemDrive") or "C:") + "\\") / "GitHub" / "HOI4-Focus-Studio" / "source_packages"
+        roots = known_source_package_roots()
+        self.assertTrue(any(str(root).casefold() == str(expected.resolve()).casefold() for root in roots))
+
+    def test_direct_exe_selects_its_own_port_without_tester_launcher(self):
+        server = (Path(__file__).resolve().parents[1] / "server.py").read_text(encoding="utf-8")
+        self.assertIn('os.environ.get("HOI4_FOCUS_STUDIO_PORT", "0")', server)
+        self.assertIn("APP_PORT = server.server_address[1]", server)
+
+    def test_production_rebuild_recovers_missing_registry_path_before_import(self):
+        from server import recover_missing_registered_sources
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); known = root / "source_packages"; known.mkdir()
+            candidate = known / "compatch.zip"
+            with zipfile.ZipFile(candidate, "w") as archive:
+                archive.writestr("descriptor.mod", 'name="[Rt56] Overhaul Mod Compatch"\nremote_file_id="3347707807"\n')
+            registry = SourceRegistry(root / "source_registry.json")
+            registry.path.write_text(__import__('json').dumps({"version":1,"packages":[{"id":"workshop:3347707807","name":"Compatch","path":str(root/'obsolete.zip'),"sourceIds":["rt56_overhaul_mod_compatch"],"sourceNames":["Compatch"],"fingerprint":"","enabled":True}]}), encoding="utf-8")
+            with patch("server.SOURCE_REGISTRY", registry), patch("server.known_source_package_roots", return_value=[known]):
+                result = recover_missing_registered_sources()
+            self.assertEqual(result["unresolved"], [])
+            self.assertEqual(result["recovered"][0]["path"], str(candidate.resolve()))
+            self.assertEqual(registry.packages()[0]["path"], str(candidate.resolve()))
 
     @unittest.skipUnless(os.name == "nt", "Windows native picker regression")
     def test_packaged_source_picker_uses_native_windows_dialog(self):
@@ -175,6 +203,7 @@ class SourceCacheTests(unittest.TestCase):
         command = run.call_args.args[0]
         self.assertIn("powershell.exe", command)
         self.assertIn("-STA", command)
+        self.assertNotIn("-WindowStyle", command)
         self.assertTrue(any("OpenFileDialog" in part for part in command))
 
     def test_versioned_tester_seed_replaces_stale_sources_but_preserves_projects(self):

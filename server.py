@@ -41,8 +41,8 @@ from tester_bootstrap import prepare_tester_storage
 ROOT = Path(__file__).resolve().parent
 PROJECT_FILE = ROOT / "projects" / "default_project.json"
 EXPORT_ROOT = ROOT / "exports"
-APP_VERSION = "6.13.1"
-APP_PORT = int(os.environ.get("HOI4_FOCUS_STUDIO_PORT", "8766"))
+APP_VERSION = "6.13.2"
+APP_PORT = int(os.environ.get("HOI4_FOCUS_STUDIO_PORT", "0"))
 APP_INSTANCE_TOKEN = os.environ.get("HOI4_FOCUS_STUDIO_INSTANCE_TOKEN", "")
 GITHUB_RELEASES_API = "https://api.github.com/repos/Doorway-creator/HOI4-Focus-Studio/releases/latest"
 UPDATE_ROOT = ROOT / "updates"
@@ -62,6 +62,11 @@ def known_source_package_roots() -> list[Path]:
     if configured: roots.append(Path(configured))
     for start in (ROOT, Path.cwd()):
         roots.extend(parent / "source_packages" for parent in (start, *start.parents))
+    # Production installs are commonly outside the repository checkout. Search the
+    # standard local source-pack location without relying on a user name or tester
+    # launcher environment variable.
+    drive = Path((os.environ.get("SystemDrive") or ROOT.drive or Path.cwd().drive or "C:") + "\\")
+    roots.append(drive / "GitHub" / "HOI4-Focus-Studio" / "source_packages")
     for package in SOURCE_REGISTRY.packages():
         path = Path(package.get("path", ""))
         if path.parent.name.lower() == "source_packages": roots.append(path.parent)
@@ -74,12 +79,17 @@ def choose_source_archive() -> str:
         script = (
             "[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new();"
             "Add-Type -AssemblyName System.Windows.Forms;"
+            "$owner=New-Object System.Windows.Forms.Form;"
+            "$owner.StartPosition='CenterScreen';$owner.Size=New-Object System.Drawing.Size(1,1);"
+            "$owner.ShowInTaskbar=$false;$owner.TopMost=$true;$owner.Opacity=0.01;"
             "$dialog=New-Object System.Windows.Forms.OpenFileDialog;"
             "$dialog.Title='Choose HOI4 source archive';"
             "$dialog.Filter='Source archives (*.zip;*.rar)|*.zip;*.rar|All files (*.*)|*.*';"
-            "if($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK){[Console]::Out.Write($dialog.FileName)}"
+            "$owner.Show();$owner.Activate();$owner.BringToFront();[System.Windows.Forms.Application]::DoEvents();"
+            "try{if($dialog.ShowDialog($owner) -eq [System.Windows.Forms.DialogResult]::OK){[Console]::Out.Write($dialog.FileName)}}"
+            "finally{$dialog.Dispose();$owner.Close();$owner.Dispose()}"
         )
-        result = subprocess.run(["powershell.exe", "-NoProfile", "-STA", "-WindowStyle", "Hidden", "-Command", script], capture_output=True, text=True, encoding="utf-8", errors="replace", creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        result = subprocess.run(["powershell.exe", "-NoProfile", "-STA", "-Command", script], capture_output=True, text=True, encoding="utf-8", errors="replace", creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         if result.returncode: raise RuntimeError("The native source picker could not open: " + (result.stderr.strip() or f"PowerShell exit code {result.returncode}"))
         return result.stdout.strip()
     import tkinter as tk
@@ -87,6 +97,21 @@ def choose_source_archive() -> str:
     window = tk.Tk(); window.withdraw(); window.attributes("-topmost", True)
     try: return filedialog.askopenfilename(title="Choose HOI4 source archive", filetypes=[("Source archives", "*.zip *.rar"), ("All files", "*.*")])
     finally: window.destroy()
+
+
+def recover_missing_registered_sources() -> dict:
+    """Repair uniquely identifiable missing package paths before a rebuild."""
+    recovered, unresolved = [], []
+    for package in SOURCE_REGISTRY.packages():
+        if not package.get("enabled") or Path(package.get("path", "")).is_file():
+            continue
+        matches = SOURCE_REGISTRY.recovery_candidates(package.get("id", ""), known_source_package_roots())
+        if len(matches) == 1:
+            repaired, _ = SOURCE_REGISTRY.register(matches[0]["path"], package.get("id", ""))
+            recovered.append({"packageId": repaired["id"], "name": repaired["name"], "path": repaired["path"]})
+        else:
+            unresolved.append({"packageId": package.get("id", ""), "name": package.get("name", ""), "matches": matches})
+    return {"recovered": recovered, "unresolved": unresolved}
 
 
 class CleanupDirectory:
@@ -1281,7 +1306,11 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json({"ok": True, "package": package, "rebuild": rebuilt})
             elif request_path == "/api/source/rebuild":
                 SOURCE_REGISTRY.migrate_catalog(SOURCE_CATALOG.path)
-                self.send_json({"ok": True} | rebuild_source_cache(SOURCE_ROOT, SOURCE_REGISTRY.enabled_paths()))
+                recovery = recover_missing_registered_sources()
+                if recovery["unresolved"]:
+                    names = ", ".join(item["name"] for item in recovery["unresolved"])
+                    raise ValueError(f"Registered source package is missing and could not be recovered automatically: {names}. Use Reselect source.")
+                self.send_json({"ok": True, "automaticRecovery": recovery["recovered"]} | rebuild_source_cache(SOURCE_ROOT, SOURCE_REGISTRY.enabled_paths()))
             elif request_path == "/api/playset/select-folders":
                 import tkinter as tk
                 from tkinter import filedialog
@@ -1326,6 +1355,7 @@ class Handler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     server = ThreadingHTTPServer(("127.0.0.1", APP_PORT), Handler)
+    APP_PORT = server.server_address[1]
     query = "?instance=" + urllib.parse.quote(APP_INSTANCE_TOKEN) if APP_INSTANCE_TOKEN else ""
     if os.environ.get("HOI4_FOCUS_STUDIO_NO_BROWSER") != "1":
         threading.Timer(0.7, lambda: webbrowser.open(f"http://127.0.0.1:{APP_PORT}/{query}")).start()

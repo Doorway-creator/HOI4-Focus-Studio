@@ -21,6 +21,14 @@ class SourceNavigationTests(unittest.TestCase):
         for behavior in ("Enable as project dependency", "Catalog load order", "Move earlier", "Move later", "Unavailable source:"):
             self.assertIn(behavior, self.script)
 
+    def test_production_source_actions_have_live_handlers_and_progress(self):
+        for action in ("selectAndReplaceSource(source)", "removeRegisteredSource(source)", "move(-1)", "move(1)"):
+            self.assertIn(action, self.script)
+        self.assertIn("addEventListener('click'", self.script)
+        self.assertIn("Removing ${source.name} and rebuilding", self.script)
+        self.assertIn("already the earliest project dependency", self.script)
+        self.assertIn("Recovered source from local package folder", self.script)
+
     def test_character_and_spirit_shortcuts_open_imported_browsers(self):
         self.assertIn('id="browseImportedCharacters"', self.html)
         self.assertIn('id="browseImportedSpirits"', self.html)
