@@ -11,3 +11,12 @@ projects/*.json
 *.spec
 build/
 dist/
+*-uncommitted-*.zip
+official-v*-release.zip
+official-*-tester-data/
+registry-*-qa/
+registry-*-integration/
+registry-*-package/
+auto-recovery-*-qa/
+tester-screenshots-*/
+tools/update_tester_catalog_paths.py

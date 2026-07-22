@@ -27,6 +27,8 @@ from export_validation import validate_references
 from project_migrations import migrate_project
 from source_catalog import SourceCatalog
 from source_importer import import_sources
+from source_cache import rebuild_source_cache
+from source_registry import SourceRegistry
 from project_content import character_action_script, spirit_action_script
 from clausewitz_parser import Block, parse as parse_clausewitz, serialize as serialize_clausewitz
 from project_storage import ProjectStorage, default_app_data_root
@@ -34,19 +36,57 @@ from base_source import BaseSourceRequired, recover_base_source, require_base_so
 from technology_tree import export_project_technologies, validate_project_technologies
 from foreign_technology import foreign_link_effects, foreign_link_preview
 from playset_snapshot import create_playset_snapshot, list_snapshots
+from tester_bootstrap import prepare_tester_storage
 
 ROOT = Path(__file__).resolve().parent
 PROJECT_FILE = ROOT / "projects" / "default_project.json"
 EXPORT_ROOT = ROOT / "exports"
-APP_VERSION = "6.13.0"
+APP_VERSION = "6.13.1"
+APP_PORT = int(os.environ.get("HOI4_FOCUS_STUDIO_PORT", "8766"))
+APP_INSTANCE_TOKEN = os.environ.get("HOI4_FOCUS_STUDIO_INSTANCE_TOKEN", "")
 GITHUB_RELEASES_API = "https://api.github.com/repos/Doorway-creator/HOI4-Focus-Studio/releases/latest"
 UPDATE_ROOT = ROOT / "updates"
 APP_DATA_ROOT = default_app_data_root()
+prepare_tester_storage(APP_DATA_ROOT)
 PROJECT_STORAGE = ProjectStorage(APP_DATA_ROOT, PROJECT_FILE)
 SOURCE_ROOT = APP_DATA_ROOT / "sources"
 SOURCE_CATALOG = SourceCatalog(SOURCE_ROOT / "catalog.sqlite3")
+SOURCE_REGISTRY = SourceRegistry(APP_DATA_ROOT / "source_registry.json")
 PLAYSET_ROOT = APP_DATA_ROOT / "playset_snapshots"
 LOCAL_PATH_FIELDS = {"exportPath", "hoi4ModFolder"}
+
+
+def known_source_package_roots() -> list[Path]:
+    roots = []
+    configured = os.environ.get("HOI4_FOCUS_STUDIO_SOURCE_PACKAGES", "").strip()
+    if configured: roots.append(Path(configured))
+    for start in (ROOT, Path.cwd()):
+        roots.extend(parent / "source_packages" for parent in (start, *start.parents))
+    for package in SOURCE_REGISTRY.packages():
+        path = Path(package.get("path", ""))
+        if path.parent.name.lower() == "source_packages": roots.append(path.parent)
+    return list(dict.fromkeys(path.resolve() for path in roots))
+
+
+def choose_source_archive() -> str:
+    """Use a native Windows picker that remains available in the packaged executable."""
+    if os.name == "nt":
+        script = (
+            "[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new();"
+            "Add-Type -AssemblyName System.Windows.Forms;"
+            "$dialog=New-Object System.Windows.Forms.OpenFileDialog;"
+            "$dialog.Title='Choose HOI4 source archive';"
+            "$dialog.Filter='Source archives (*.zip;*.rar)|*.zip;*.rar|All files (*.*)|*.*';"
+            "if($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK){[Console]::Out.Write($dialog.FileName)}"
+        )
+        result = subprocess.run(["powershell.exe", "-NoProfile", "-STA", "-WindowStyle", "Hidden", "-Command", script], capture_output=True, text=True, encoding="utf-8", errors="replace", creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        if result.returncode: raise RuntimeError("The native source picker could not open: " + (result.stderr.strip() or f"PowerShell exit code {result.returncode}"))
+        return result.stdout.strip()
+    import tkinter as tk
+    from tkinter import filedialog
+    window = tk.Tk(); window.withdraw(); window.attributes("-topmost", True)
+    try: return filedialog.askopenfilename(title="Choose HOI4 source archive", filetypes=[("Source archives", "*.zip *.rar"), ("All files", "*.*")])
+    finally: window.destroy()
 
 
 class CleanupDirectory:
@@ -1049,7 +1089,23 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         request_path = self.path.split("?", 1)[0].rstrip("/") or "/"
         if request_path == "/api/version":
-            self.send_json({"version": APP_VERSION, "port": 8766})
+            self.send_json({"version": APP_VERSION, "port": APP_PORT})
+            return
+        if request_path == "/api/runtime":
+            health = SOURCE_CATALOG.health()
+            self.send_json({
+                "version": APP_VERSION,
+                "pid": os.getpid(),
+                "executable": str(Path(sys.executable).resolve()),
+                "serverRoot": str(ROOT.resolve()),
+                "storageRoot": str(APP_DATA_ROOT.resolve()),
+                "requiredStorageRoot": os.environ.get("HOI4_FOCUS_STUDIO_REQUIRED_STORAGE_ROOT", ""),
+                "cataloguePath": str(SOURCE_CATALOG.path.resolve()),
+                "port": APP_PORT,
+                "instanceToken": APP_INSTANCE_TOKEN,
+                "cache": health,
+                "renderAllowed": bool(health["compatible"] and health["localisations"] > 0 and health["iconAssets"] > 0),
+            })
             return
         if request_path == "/api/update/check":
             self.send_json(check_for_updates())
@@ -1066,7 +1122,13 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json({"ok": True, "available": False, "projectId": project["projectId"], "message": str(exc)})
             return
         if request_path == "/api/sources":
-            self.send_json({"sources": SOURCE_CATALOG.sources() if SOURCE_CATALOG.path.exists() else []})
+            registry = SOURCE_REGISTRY.migrate_catalog(SOURCE_CATALOG.path)
+            packages = registry["packages"]
+            sources = SOURCE_CATALOG.sources() if SOURCE_CATALOG.path.exists() else []
+            for source in sources:
+                package = next((item for item in packages if source["id"] in item.get("sourceIds", ())), None)
+                source.update({"packageId": package.get("id", "") if package else "", "currentSourcePath": package.get("path", "") if package else "", "sourcePathExists": bool(package and Path(package.get("path", "")).is_file()), "registered": bool(package and package.get("enabled"))})
+            self.send_json({"sources": sources, "packages": packages, "cache": SOURCE_CATALOG.health()})
             return
         if request_path == "/api/playset-snapshots":
             self.send_json({"snapshots": list_snapshots(PLAYSET_ROOT)})
@@ -1080,7 +1142,11 @@ class Handler(SimpleHTTPRequestHandler):
             query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
             profile = query.get("profile", ["vanilla"])[0]; country = query.get("country", ["NOR"])[0]
             category = query.get("category", [""])[0]; text = query.get("q", [""])[0]; include_hidden = query.get("includeHidden", ["0"])[0] == "1"
-            self.send_json(SOURCE_CATALOG.technology_tree(profile, country, category, text, include_hidden) if SOURCE_CATALOG.path.exists() else {"items": [], "categories": [], "profile": profile, "country": country})
+            health = SOURCE_CATALOG.health()
+            if not health["compatible"]:
+                self.send_json({"items": [], "categories": [], "profile": profile, "country": country, "cacheIncompatible": True, "cache": health})
+            else:
+                self.send_json(SOURCE_CATALOG.technology_tree(profile, country, category, text, include_hidden) | {"cache": health})
             return
         if request_path == "/api/source-asset":
             query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
@@ -1175,15 +1241,47 @@ class Handler(SimpleHTTPRequestHandler):
                 window.destroy()
                 self.send_json({"ok": True, "path": chosen})
             elif request_path == "/api/source/select":
-                import tkinter as tk
-                from tkinter import filedialog
-                window = tk.Tk(); window.withdraw(); window.attributes("-topmost", True)
-                chosen = filedialog.askopenfilename(title="Choose HOI4 source archive", filetypes=[("Source archives", "*.zip *.rar"), ("All files", "*.*")])
-                window.destroy(); self.send_json({"ok": True, "path": chosen})
+                self.send_json({"ok": True, "path": choose_source_archive()})
             elif request_path == "/api/source/import":
                 chosen = Path(str(data.get("path", ""))).resolve()
                 if not chosen.exists(): raise ValueError("The selected source archive does not exist.")
-                self.send_json({"ok": True} | import_sources(chosen, SOURCE_CATALOG.path))
+                SOURCE_REGISTRY.migrate_catalog(SOURCE_CATALOG.path)
+                package, inspected = SOURCE_REGISTRY.register(chosen)
+                try: rebuilt = rebuild_source_cache(SOURCE_ROOT, SOURCE_REGISTRY.enabled_paths())
+                except Exception as exc:
+                    self.send_json({"ok": True, "package": package, "sources": inspected["sources"], "rebuildFailed": True, "rebuildError": str(exc)}); return
+                self.send_json({"ok": True, "package": package, "sources": inspected["sources"], "rebuild": rebuilt})
+            elif request_path == "/api/source/reselect":
+                chosen = Path(str(data.get("path", ""))).resolve()
+                if not chosen.exists(): raise ValueError("The selected source archive does not exist.")
+                SOURCE_REGISTRY.migrate_catalog(SOURCE_CATALOG.path)
+                package, inspected = SOURCE_REGISTRY.register(chosen, str(data.get("packageId", "")))
+                try: rebuilt = rebuild_source_cache(SOURCE_ROOT, SOURCE_REGISTRY.enabled_paths())
+                except Exception as exc:
+                    self.send_json({"ok": True, "package": package, "sources": inspected["sources"], "rebuildFailed": True, "rebuildError": str(exc)}); return
+                self.send_json({"ok": True, "package": package, "sources": inspected["sources"], "rebuild": rebuilt})
+            elif request_path == "/api/source/recover-local":
+                SOURCE_REGISTRY.migrate_catalog(SOURCE_CATALOG.path)
+                identifier = str(data.get("packageId", "")); matches = SOURCE_REGISTRY.recovery_candidates(identifier, known_source_package_roots())
+                if len(matches) != 1:
+                    self.send_json({"ok": True, "recovered": False, "matches": matches}); return
+                package, inspected = SOURCE_REGISTRY.register(matches[0]["path"], identifier)
+                try: rebuilt = rebuild_source_cache(SOURCE_ROOT, SOURCE_REGISTRY.enabled_paths())
+                except Exception as exc:
+                    self.send_json({"ok": True, "recovered": True, "package": package, "sources": inspected["sources"], "rebuildFailed": True, "rebuildError": str(exc)}); return
+                self.send_json({"ok": True, "recovered": True, "package": package, "sources": inspected["sources"], "rebuild": rebuilt})
+            elif request_path == "/api/source/remove":
+                SOURCE_REGISTRY.migrate_catalog(SOURCE_CATALOG.path)
+                package = SOURCE_REGISTRY.remove(str(data.get("packageId", "")))
+                paths = SOURCE_REGISTRY.enabled_paths(); rebuilt = None
+                if paths:
+                    try: rebuilt = rebuild_source_cache(SOURCE_ROOT, paths)
+                    except Exception as exc:
+                        self.send_json({"ok": True, "package": package, "rebuildFailed": True, "rebuildError": str(exc)}); return
+                self.send_json({"ok": True, "package": package, "rebuild": rebuilt})
+            elif request_path == "/api/source/rebuild":
+                SOURCE_REGISTRY.migrate_catalog(SOURCE_CATALOG.path)
+                self.send_json({"ok": True} | rebuild_source_cache(SOURCE_ROOT, SOURCE_REGISTRY.enabled_paths()))
             elif request_path == "/api/playset/select-folders":
                 import tkinter as tk
                 from tkinter import filedialog
@@ -1227,8 +1325,10 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    server = ThreadingHTTPServer(("127.0.0.1", 8766), Handler)
-    threading.Timer(0.7, lambda: webbrowser.open("http://127.0.0.1:8766")).start()
-    print("HOI4 Focus Studio is running at http://127.0.0.1:8766")
+    server = ThreadingHTTPServer(("127.0.0.1", APP_PORT), Handler)
+    query = "?instance=" + urllib.parse.quote(APP_INSTANCE_TOKEN) if APP_INSTANCE_TOKEN else ""
+    if os.environ.get("HOI4_FOCUS_STUDIO_NO_BROWSER") != "1":
+        threading.Timer(0.7, lambda: webbrowser.open(f"http://127.0.0.1:{APP_PORT}/{query}")).start()
+    print(f"HOI4 Focus Studio is running at http://127.0.0.1:{APP_PORT}")
     print("Close this window to stop it.")
     server.serve_forever()

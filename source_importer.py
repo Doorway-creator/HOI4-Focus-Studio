@@ -61,6 +61,25 @@ def roots(names: list[str]) -> list[tuple[str, str, str]]:
     return [(sid, *value) for sid, value in found.items()]
 
 
+def inspect_source_package(archive_path: str | Path) -> dict:
+    """Read stable source identities without changing a catalogue."""
+    archive_path = Path(archive_path).resolve(); archive = open_archive(archive_path)
+    if isinstance(archive, RarArchive):
+        archive_path = archive.path
+        signature = ":".join(f"{part.name}:{part.stat().st_size}:{part.stat().st_mtime_ns}" for part in archive.volume_paths())
+    else:
+        stat = archive_path.stat(); signature = f"{archive_path.name}:{stat.st_size}:{stat.st_mtime_ns}"
+    names = archive.names(); sources = []
+    for sid, guessed_name, prefix, layer in roots(names):
+        relative = {name[len(prefix):]: name for name in names if name.startswith(prefix)}
+        descriptor_name = next((full for rel, full in relative.items() if rel.lower() == "descriptor.mod"), None)
+        descriptor = descriptor_data(archive.read_text(descriptor_name)) if descriptor_name else {"name": guessed_name}
+        display = descriptor.get("name", guessed_name)
+        sources.append({"id": source_id(display) if sid == "imported_source" else sid, "name": display, "layer": layer, "descriptor": descriptor})
+    if not sources: raise ValueError("The selected package contains no recognizable HOI4 source layer.")
+    return {"path": str(archive_path), "fingerprint": hashlib.sha256(signature.encode()).hexdigest(), "sources": sources, "files": len(names)}
+
+
 def coverage(relative_names: list[str]) -> dict:
     mapping = {"characters": "/common/characters/", "ideas": "/common/ideas/", "technologies": "/common/technologies/", "equipment": "/common/units/equipment/", "modules": "/common/units/equipment/modules/", "units": "/common/units/", "mios": "/common/military_industrial_organization/", "designs": "/history/units/", "localisation": "/localisation/english/", "portraits": "/gfx/leaders/"}
     padded = ["/" + name.lower().lstrip("/") for name in relative_names]
@@ -209,13 +228,14 @@ def import_sources(archive_path: str | Path, catalog_path: Path) -> dict:
                     db.execute("INSERT OR IGNORE INTO entities(entity_type,entity_id,display_name,source_id,source_file,source_line,raw_text,normalized,requirements) VALUES(?,?,?,?,?,?,?,?,?)", (kind, entity_id, normalized.get("resolvedDisplayName", localisation.get(entity_id, entity_id)), sid, rel, entry.line, raw, json.dumps(normalized), json.dumps(requirements)))
                     for ref in refs: db.execute("INSERT INTO edges VALUES(?,?,?,?,?,?)", (kind, entity_id, "references", "unknown", ref, sid))
                     imported += 1
-            summaries.append({"id": sid, "name": display, "coverage": cov, "entities": imported})
+            summaries.append({"id": sid, "name": display, "coverage": cov, "entities": imported, "descriptor": descriptor})
         addon_name = "NSB Tank Overhaul - In-Depth Designer Addon"
         addon_present = db.execute("SELECT 1 FROM sources WHERE name=? AND enabled=1", (addon_name,)).fetchone()
         if any(item["name"] == "[Rt56] Overhaul Mod Compatch" for item in summaries) and not addon_present:
             sid = "nsb_tank_overhaul_in_depth_designer_addon"
             unavailable = {key: {"status": "unavailable", "files": 0} for key in ("characters","ideas","technologies","equipment","modules","units","mios","designs","localisation","portraits")}
             db.execute("INSERT OR REPLACE INTO sources VALUES(?,?,?,?,?,?,?,?,0)", (sid, addon_name, "dependency", 99, "", "", json.dumps({"missing": True}), json.dumps(unavailable)))
+        catalog.mark_current(db)
     return {"sources": summaries, "files": len(names), "fingerprint": fingerprint}
 
 

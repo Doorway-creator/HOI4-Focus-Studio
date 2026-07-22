@@ -6,7 +6,7 @@ param(
     [string]$ServerScript = ""
 )
 
-$protectedNames = @('projects', 'exports', 'backups', 'imports', 'updates', 'sources', 'source_packages', 'playset_snapshots', 'diagnostics', 'settings')
+$protectedNames = @('projects', 'exports', 'backups', 'imports', 'updates', 'sources', 'source_packages', 'source_registry.json', 'playset_snapshots', 'diagnostics', 'settings')
 Wait-Process -Id $ProcessId -ErrorAction SilentlyContinue
 
 Get-ChildItem -LiteralPath $StagedRoot -Recurse -File | ForEach-Object {

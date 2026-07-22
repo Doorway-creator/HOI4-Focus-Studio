@@ -114,7 +114,8 @@ def normalize_rar_volume(path: Path) -> Path:
 def short_staging_base() -> Path:
     """Choose a short writable root so legacy Windows tools stay below MAX_PATH."""
     candidates = []
-    if os.name == "nt": candidates.append(Path(os.environ.get("SystemDrive", "C:")) / "HFSRC")
+    if os.name == "nt":
+        candidates.append(windows_short_staging_root())
     candidates.append(Path(tempfile.gettempdir()) / "HF")
     errors = []
     for candidate in candidates:
@@ -126,6 +127,11 @@ def short_staging_base() -> Path:
         except OSError as exc:
             errors.append(f"{candidate}: {exc}")
     raise RuntimeError("No writable short extraction root is available. " + "; ".join(errors))
+
+
+def windows_short_staging_root() -> Path:
+    drive = os.environ.get("SystemDrive", "C:").rstrip("\\/")
+    return Path(drive + "\\") / "HFSRC"
 
 
 def find_unrar():

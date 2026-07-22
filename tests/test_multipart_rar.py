@@ -1,10 +1,11 @@
 from pathlib import Path
+import os
 import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
 
-from source_archives import RarArchive, normalize_rar_volume
+from source_archives import RarArchive, normalize_rar_volume, windows_short_staging_root
 from source_importer import import_sources
 
 
@@ -15,6 +16,13 @@ LONG_MIO_ICON = Path(r"HOI4_Studio_Source_Pack_20260720_025844\Vanilla\gfx\inter
 
 
 class MultipartRarTests(unittest.TestCase):
+    @unittest.skipUnless(os.name == "nt", "Windows extraction-root regression")
+    def test_windows_short_staging_root_is_drive_absolute(self):
+        root = windows_short_staging_root()
+        self.assertTrue(root.is_absolute())
+        self.assertEqual(root.name, "HFSRC")
+        self.assertEqual(root.parent, Path(root.drive + "\\"))
+
     def test_any_selected_volume_normalizes_to_part1(self):
         self.assertEqual(normalize_rar_volume(Path("pack.part2.rar")).name, "pack.part1.rar")
         self.assertEqual(normalize_rar_volume(Path("pack.part2(1).rar")).name, "pack.part1(1).rar")

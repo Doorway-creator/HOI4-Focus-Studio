@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HOI4 Focus Studio v6.13.0</title>
+<title>HOI4 Focus Studio v6.13.1</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -47,6 +47,12 @@
   <aside class="tools tech-tools">
     <h2>Tech Trees <span class="experimental-badge">Experimental</span></h2>
     <p class="hint">Browse imported trees as players see them. Imported definitions are always read-only.</p>
+    <section id="techRuntimeStatus" class="runtime-status runtime-status-pending" aria-live="polite">
+      <strong>Verifying technology source catalogue…</strong>
+      <p>No technology tree will render until the source catalogue is validated.</p>
+      <button id="techRuntimeRebuild" type="button">Rebuild technology source cache</button>
+      <p id="techRuntimeRebuildStatus" class="rebuild-progress"></p>
+    </section>
     <label>Source environment<select id="techSource"><option value="vanilla">Vanilla only</option><option value="road_to_56">Road to 56</option><option value="playset">Custom imported playset snapshot</option></select></label>
     <section class="playset-box"><strong>Playset snapshot <span class="experimental-badge">Experimental</span></strong><p class="hint">Frozen read-only sources resolve in the listed order; the current project overlay is always last.</p><input id="playsetName" placeholder="Snapshot name"><div id="playsetSources"></div><button id="addPlaysetSource">Add installed mod folder…</button><button id="createPlaysetSnapshot">Create frozen snapshot</button><select id="playsetSnapshot"><option value="">No custom snapshot selected</option></select><p id="playsetProgress" class="hint"></p></section>
     <label>Country<select id="techCountry"><option value="NOR">Norway</option><option value="GER">Germany</option><option value="SWE">Sweden</option><option value="ENG">United Kingdom</option><option value="ITA">Italy</option></select></label>
@@ -71,7 +77,7 @@
     <p id="techProfileWarning" class="source-warning" hidden></p>
     <p id="techWarnings" class="hint">Imported technologies are read-only. Review generated effects before export.</p>
     <details open><summary>Layout diagnostics</summary><div id="techDiagnostics" class="tech-diagnostics"><p class="hint">No layout warnings.</p></div></details>
-    <details open><summary>Technology Source Diagnostics</summary><div id="techSourceDiagnostics" class="source-diagnostics"><p class="hint">Open a technology category to collect diagnostics.</p></div><button id="exportTechDiagnostics">Export diagnostic report</button></details>
+    <details open><summary>Technology Source Diagnostics</summary><div id="techSourceDiagnostics" class="source-diagnostics"><p class="hint">Open a technology category to collect diagnostics.</p></div><button id="techDiagnosticsRebuild" type="button" hidden>Rebuild technology source cache</button><p id="techDiagnosticsRebuildStatus" class="rebuild-progress"></p><button id="exportTechDiagnostics">Export diagnostic report</button></details>
   </aside>
   <section id="techViewport" class="tech-viewport" tabindex="0" aria-label="Technology tree canvas"><div id="techEmptyState" class="tech-empty" hidden>No renderable technologies exist in this category.</div><div id="techWorld"><div id="techSurface"><svg id="techEdges"></svg><div id="techNodes"></div></div></div></section>
   <button id="toggleTechInspector" class="tech-inspector-toggle" type="button" aria-expanded="true">Collapse inspector</button>
@@ -92,7 +98,8 @@
   <section class="formpage source-page">
     <h2>Imported game and dependency sources</h2>
     <p class="hint">Sources are indexed locally and remain read-only. Exports contain only current-project definitions, intentional overrides, references, and scripted effects.</p>
-    <div class="source-actions"><button id="chooseSource">Choose ZIP or multipart RAR…</button><button id="importSource" class="primary" disabled>Import selected source</button><button id="rebuildCatalog">Re-import / rebuild catalog</button><span id="sourceImportStatus" class="hint"></span></div>
+    <div class="source-actions"><button id="chooseSource">Choose ZIP or multipart RAR…</button><button id="importSource" class="primary" disabled>Import selected source</button><button id="rebuildCatalog">Rebuild technology source cache</button><span id="sourceImportStatus" class="hint"></span></div>
+    <div id="sourceCacheDiagnostics" class="source-diagnostics"><p class="hint">Technology source cache has not been checked.</p></div>
     <h3>Registered source packages</h3>
     <div id="sourceWarnings" class="source-warnings"></div>
     <div id="sourceList"></div>

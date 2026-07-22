@@ -8,8 +8,12 @@ from clausewitz_parser import Block, identifiers, parse, serialize
 from contextlib import contextmanager
 
 
+CATALOG_SCHEMA_VERSION = 2
+SOURCE_FIDELITY_VERSION = 2
+
 SCHEMA = """
 PRAGMA foreign_keys=ON;
+CREATE TABLE IF NOT EXISTS catalog_meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS sources(id TEXT PRIMARY KEY, name TEXT NOT NULL, layer TEXT NOT NULL, load_order INTEGER NOT NULL, archive_path TEXT NOT NULL, fingerprint TEXT NOT NULL, descriptor TEXT NOT NULL, coverage TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1);
 CREATE TABLE IF NOT EXISTS entities(row_id INTEGER PRIMARY KEY, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL, display_name TEXT NOT NULL, source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE, source_file TEXT NOT NULL, source_line INTEGER NOT NULL, raw_text TEXT NOT NULL, normalized TEXT NOT NULL, requirements TEXT NOT NULL, UNIQUE(entity_type, entity_id, source_id, source_file, source_line));
 CREATE INDEX IF NOT EXISTS entity_lookup ON entities(entity_type, entity_id);
@@ -67,13 +71,49 @@ class SourceCatalog:
     def __init__(self, path: Path): self.path = path
     @contextmanager
     def connect(self):
+        existed = self.path.exists()
         self.path.parent.mkdir(parents=True, exist_ok=True)
         db = sqlite3.connect(self.path); db.row_factory = sqlite3.Row; db.executescript(SCHEMA)
+        if not existed:
+            db.execute("INSERT OR REPLACE INTO catalog_meta VALUES('schema_version',?)", (str(CATALOG_SCHEMA_VERSION),))
         try:
             yield db
             db.commit()
         finally:
             db.close()
+
+    def mark_current(self, db) -> None:
+        db.execute("INSERT OR REPLACE INTO catalog_meta VALUES('schema_version',?)", (str(CATALOG_SCHEMA_VERSION),))
+        db.execute("INSERT OR REPLACE INTO catalog_meta VALUES('source_fidelity_version',?)", (str(SOURCE_FIDELITY_VERSION),))
+
+    def health(self) -> dict:
+        result = {"compatible": False, "reason": "Technology source cache has not been built.", "schemaVersion": None, "expectedSchemaVersion": CATALOG_SCHEMA_VERSION, "fidelityVersion": None, "expectedFidelityVersion": SOURCE_FIDELITY_VERSION, "sources": 0, "entities": 0, "technologies": 0, "localisations": 0, "edges": 0, "iconAssets": 0, "previews": 0}
+        if not self.path.is_file(): return result
+        db = None
+        try:
+            db = sqlite3.connect(f"file:{self.path.as_posix()}?mode=ro", uri=True)
+            tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            if "catalog_meta" in tables:
+                meta = dict(db.execute("SELECT key,value FROM catalog_meta"))
+                result["schemaVersion"] = int(meta.get("schema_version", 0) or 0)
+                result["fidelityVersion"] = int(meta.get("source_fidelity_version", 0) or 0)
+            for key, table in (("sources", "sources"), ("entities", "entities"), ("localisations", "localisations"), ("edges", "edges")):
+                if table in tables: result[key] = db.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+            if "entities" in tables: result["technologies"] = db.execute("SELECT COUNT(*) FROM entities WHERE entity_type='technology'").fetchone()[0]
+            assets = self.path.parent / "assets"; previews = self.path.parent / "previews"
+            result["iconAssets"] = sum(1 for item in assets.rglob("*") if item.is_file()) if assets.is_dir() else 0
+            result["previews"] = sum(1 for item in previews.rglob("*") if item.is_file()) if previews.is_dir() else 0
+            versions_ok = result["schemaVersion"] == CATALOG_SCHEMA_VERSION and result["fidelityVersion"] == SOURCE_FIDELITY_VERSION
+            fidelity_ok = not result["technologies"] or bool(result["localisations"] and result["iconAssets"])
+            result["compatible"] = versions_ok and fidelity_ok
+            if not versions_ok: result["reason"] = "Technology source cache predates the current localisation, icon, and layout indexes. Rebuild it before browsing technologies."
+            elif not fidelity_ok: result["reason"] = "Technology source cache is incomplete: localisation or icon assets are missing. Rebuild it before browsing technologies."
+            else: result["reason"] = "Technology source cache is current."
+        except (sqlite3.Error, OSError, ValueError) as exc:
+            result["reason"] = f"Technology source cache could not be validated: {exc}"
+        finally:
+            if db is not None: db.close()
+        return result
 
     def sources(self):
         with self.connect() as db:

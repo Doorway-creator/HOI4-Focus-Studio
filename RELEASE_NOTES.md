@@ -1,19 +1,22 @@
-# HOI4 Focus Studio 6.13.0
+# HOI4 Focus Studio 6.13.1
 
-## Experimental Technology Trees
+## Technology source fidelity hotfix
 
-- Browse read-only Vanilla and Road to 56 technologies for Norway, Germany, Sweden, the United Kingdom, and Italy with player-facing names, icons, source layouts, filtering, search, Game view, and Modder view.
-- Navigate large trees with shared Focus Tree zoom behavior, cursor-centred zoom, pan, scrollbars, Fit tree, remembered per-view positions, and a collapsible inspector.
-- Inspect source files, prerequisites, mutually exclusive links, years, costs, modifiers, unlocks, localisation, icons, and non-fatal source/layout diagnostics.
-- Clone imported technologies or create project-owned technologies without modifying Vanilla, Road to 56, Workshop, or imported source files.
-- Store technology definitions, tree attachments, locked Focus references, protected playset snapshots, and profile-specific prerequisites additively.
-- Keep direct unlock tools separate from foreign technology and licensing. Unsupported licence/manufacturing requests refuse generation rather than guessing syntax.
-- Resolve equipment shipments from explicit unlocked equipment IDs where possible, allow warned manual correction, and preview exact generated HOI4 code.
+- Restores player-facing technology names, recursive localisation, source-driven layouts, and packaged Vanilla/Road to 56 icon resolution, including inherited BBA and NSB assets.
+- Validates technology catalogue schema and fidelity before rendering and provides visible rebuild actions with progress and diagnostics.
+- Keeps imported technologies read-only and preserves the experimental Technology Trees, Focus Lock, and foreign-technology linking introduced in 6.13.0.
+
+## Stable source recovery
+
+- Stores registered package locations in a durable registry outside the replaceable SQLite catalogue and migrates existing 6.13.0 registrations additively.
+- Merges duplicate registrations by stable package/source ID, updates paths without relying on filenames, and displays the current path with Reselect source and Remove source actions.
+- Automatically searches known local `source_packages` folders for missing packages, preferring stable package identity and using exact filename only as a fallback.
+- Uses a native Windows file picker when automatic recovery finds no match and an in-app chooser when several valid copies are available.
+- Corrects portable multipart-RAR extraction to use the true short absolute `C:\HFSRC` staging root.
 
 ## Safety and compatibility
 
-- Existing projects retain their stable project ID, focuses, events, decisions, characters, national spirits, and protected recovered base source.
-- Export includes only project-owned technology definitions, localisation, interface entries, icons, and linked project-owned equipment/modules.
-- Imported technologies remain read-only, with a visible reminder to review generated effects before export.
-- The updater continues to replace program files only and preserves projects, exports, backups, settings, selected paths, protected base sources, source catalogs, and playset snapshots.
-- Retains the 6.12.1 connection-mode hotfix: destination clicks take priority while creating focus connections, while multi-select and grouped movement remain available outside connection mode.
+- Source-cache rebuilds remain transactional: a failed import or rebuild leaves the previous validated catalogue active.
+- The normal executable launches directly and uses `%LOCALAPPDATA%\HOI4 Focus Studio` without a tester launcher or storage override.
+- Existing projects, protected base sources, stable project IDs, focus links, imported dependencies, export settings, playset snapshots, and source registry data are preserved during migration and update.
+- This hotfix does not add technology rename or icon-override editing; that work remains deferred.
